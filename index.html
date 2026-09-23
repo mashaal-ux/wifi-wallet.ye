@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>محفظة كروت شبكات الواي فاي | شحن رصيد وبونص 10% وشراء فوري</title>
+    
+    <!-- Google Fonts: Cairo & Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest & App Icon -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#030712">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome 6 Pro-style icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- html2pdf.js لتصدير كشوفات الحساب بصيغة PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white pb-20 md:pb-6">
+
+    <!-- ==================== رأس الصفحة / الشريط العلوي ==================== -->
+    <header class="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-md border-b border-gray-800/80 transition-all shadow-sm">
+        <div class="max-w-6xl mx-auto px-3.5 sm:px-6">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                
+                <!-- الشعار واسم المنصة -->
+                <div class="flex items-center gap-2.5 cursor-pointer" onclick="app.navigate('shop')">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20 text-white flex-shrink-0">
+                        <i class="fa-solid fa-wifi text-sm sm:text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5 leading-none">
+                            <span class="font-extrabold text-base sm:text-lg text-white">واي فاي اليمن</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">بونص 10%</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 hidden sm:block mt-0.5">محفظة كروت شبكات الواي فاي وشحن فوري</p>
+                    </div>
+                </div>
+
+                <!-- قائمة الروابط في الكمبيوتر - تتكيف ديناميكياً بحسب صلاحية المستخدم -->
+                <nav id="desktop-nav" class="hidden md:flex items-center gap-1 bg-gray-800/70 p-1 rounded-xl border border-gray-700/50">
+                    <button onclick="app.navigate('shop')" data-page="shop" class="nav-link active px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2">
+                        <i class="fa-solid fa-store text-emerald-400"></i>
+                        <span>المتجر</span>
+                    </button>
+                    <button onclick="app.navigate('deposit')" data-page="deposit" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-300 hover:text-white">
+                        <i class="fa-solid fa-circle-arrow-down text-teal-400"></i>
+                        <span>إيداع وشحن</span>
+                    </button>
+                    <button onclick="app.navigate('my-cards')" data-page="my-cards" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-300 hover:text-white">
+                        <i class="fa-solid fa-ticket text-amber-400"></i>
+                        <span>كروتي</span>
+                    </button>
+                    <button onclick="app.navigate('history')" data-page="history" class="nav-link px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 text-gray-300 hover:text-white">
+                        <i class="fa-solid fa-file-invoice-dollar text-purple-400"></i>
+                        <span>كشف الحساب</span>
+                    </button>
+                </nav>
+
+                <!-- قسم الرصيد والحساب -->
+                <div class="flex items-center gap-2">
+                    
+                    <!-- قسم المستخدم المسجل -->
+                    <div id="user-logged-in-bar" class="hidden items-center gap-2">
+                        
+                        <!-- زر الرصيد المالي المدمج -->
+                        <div onclick="app.navigate('deposit')" class="bg-gray-800 hover:bg-gray-750 border border-emerald-500/30 rounded-xl px-2.5 py-1 sm:px-3 sm:py-1.5 flex items-center gap-2 cursor-pointer transition active:scale-95">
+                            <div class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                            <div class="text-right leading-none">
+                                <span class="text-[9px] text-gray-400 block">الرصيد</span>
+                                <span class="font-black text-xs sm:text-sm text-emerald-400 font-mono" id="header-user-balance">0 ر.ي</span>
+                            </div>
+                            <div class="w-5 h-5 rounded-md bg-emerald-500 text-gray-950 flex items-center justify-center text-[10px] font-bold">
+                                <i class="fa-solid fa-plus"></i>
+                            </div>
+                        </div>
+
+                        <!-- زر الحساب المنسدل -->
+                        <div class="relative group">
+                            <button id="user-menu-btn" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 flex items-center justify-center text-xs font-bold text-teal-300 transition">
+                                <span id="user-avatar-initials">م</span>
+                            </button>
+
+                            <!-- القائمة المنسدلة -->
+                            <div class="absolute left-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl py-2 hidden group-hover:block transition-all z-50">
+                                <div class="px-3.5 py-2 border-b border-gray-800">
+                                    <p class="text-[10px] text-gray-400">الحساب الحالي</p>
+                                    <p class="text-xs font-bold text-white truncate" id="dropdown-full-name">--</p>
+                                    <span class="inline-block mt-1 text-[9px] px-2 py-0.5 rounded-full font-bold" id="dropdown-role-badge">عميل</span>
+                                </div>
+
+                                <button onclick="app.navigate('admin-profit')" id="menu-admin-btn" class="hidden w-full text-right px-3.5 py-2 text-xs text-rose-400 hover:bg-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-halved w-4 text-center"></i>
+                                    <span>لوحة الإدارة والأرباح</span>
+                                </button>
+
+                                <button onclick="app.navigate('owner')" id="menu-owner-btn" class="hidden w-full text-right px-3.5 py-2 text-xs text-teal-400 hover:bg-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-tower-broadcast w-4 text-center"></i>
+                                    <span>لوحة مالك الشبكة</span>
+                                </button>
+
+                                <button onclick="app.navigate('my-cards')" id="menu-mycards-btn" class="w-full text-right px-3.5 py-2 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-ticket w-4 text-center text-amber-400"></i>
+                                    <span>كروتي المشتراة</span>
+                                </button>
+
+                                <button onclick="app.navigate('history')" id="menu-history-btn" class="w-full text-right px-3.5 py-2 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-file-invoice-dollar w-4 text-center text-purple-400"></i>
+                                    <span>كشف الحساب والعمليات</span>
+                                </button>
+
+                                <button onclick="app.navigate('deposit')" id="menu-deposit-btn" class="w-full text-right px-3.5 py-2 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-arrow-down w-4 text-center text-emerald-400"></i>
+                                    <span>شحن المحفظة</span>
+                                </button>
+
+                                <div class="border-t border-gray-800 my-1"></div>
+
+                                <button onclick="app.logout()" class="w-full text-right px-3.5 py-1.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2">
+                                    <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i>
+                                    <span>تسجيل الخروج</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- قسم الزائر غير المسجل -->
+                    <div id="user-guest-bar" class="flex items-center gap-1.5">
+                        <button onclick="app.openAuthModal('login')" class="px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold border border-gray-700 transition">
+                            دخول
+                        </button>
+                        <button onclick="app.openAuthModal('register')" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 text-xs font-black transition shadow-sm">
+                            تسجيل
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== المحتوى الرئيسي ==================== -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-4 space-y-4">
+
+        <!-- 1. واجهة المتجر وشراء الكروت (Shop View) -->
+        <section id="view-shop" class="page-view space-y-4">
+            
+            <!-- شريط البونص الترويجي والبحث -->
+            <div class="bg-gradient-to-r from-emerald-950/80 via-gray-900 to-teal-950/80 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500 text-gray-950 flex items-center justify-center text-base flex-shrink-0 font-black">
+                            <i class="fa-solid fa-gift"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xs sm:text-sm font-black text-white">عرض البونص التلقائي 10%</h2>
+                            <p class="text-[10px] text-emerald-300">احصل على 10% رصيد إضافي مجاني فور اعتماد أي عملية إيداع!</p>
+                        </div>
+                    </div>
+                    <button onclick="app.navigate('deposit')" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex-shrink-0 shadow-sm transition">
+                        اشحن الآن
+                    </button>
+                </div>
+
+                <!-- شريط البحث والفرز الفوري -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <input type="text" id="shop-search-input" oninput="app.handleShopSearch(this.value)" placeholder="ابحث باسم الشبكة أو الباقة (مثلاً: زين نت، مريس نت، الفهد، يومية...)" class="w-full pr-9 pl-9 py-2 bg-gray-950/80 border border-gray-700/80 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                    <button id="search-clear-btn" onclick="app.clearShopSearch()" class="hidden absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط التصنيف والفلترة الأفقي للشبكات -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1" id="network-tabs">
+                <!-- تحقن تصنيفات الشبكات -->
+            </div>
+
+            <!-- شبكة عرض الشبكات والباقات -->
+            <div id="networks-container" class="space-y-4">
+                <!-- تحقن ديناميكياً بواسطة app.js -->
+            </div>
+
+        </section>
+
+        <!-- 2. واجهة شحن المحفظة والإيداع (Deposit View) -->
+        <section id="view-deposit" class="page-view hidden space-y-4">
+            
+            <div class="border-b border-gray-800 pb-2 flex items-center justify-between">
+                <div>
+                    <h1 class="text-base sm:text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-circle-arrow-down text-emerald-400"></i>
+                        <span>إيداع وشحن الرصيد</span>
+                    </h1>
+                    <p class="text-[11px] text-gray-400">حول إلى أحد حساباتنا وارفع صورة السند لشحن محفظتك فوراً</p>
+                </div>
+                <span class="text-[10px] px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                    +10% بونص مجاناً
+                </span>
+            </div>
+
+            <!-- الحسابات البنكية -->
+            <div class="space-y-2">
+                <span class="text-xs font-bold text-gray-300 block">اختر حساباً للتحويل وانسخ الرقم بلمسة واحدة:</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="banks-list-container">
+                    <!-- تحقن الحسابات البنكية -->
+                </div>
+            </div>
+
+            <!-- نموذج رفع السند -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+                <form id="deposit-form" onsubmit="app.handleDepositSubmit(event)" class="space-y-3.5">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-gray-300">اسم المودع بالسند</label>
+                            <input type="text" id="dep-customer-name" required placeholder="الاسم كما في الحوالة" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-gray-300">المبلغ المحول (ر.ي)</label>
+                            <input type="number" id="dep-amount" min="100" required placeholder="مثال: 5000" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-gray-300">البنك المحول إليه</label>
+                            <select id="dep-bank-name" required class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                                <option value="بنك الكريمي الإسلامي">بنك الكريمي الإسلامي</option>
+                                <option value="بنك القطيبي الإسلامي">بنك القطيبي الإسلامي</option>
+                                <option value="صرافة النجم للحوالات">صرافة النجم للحوالات</option>
+                                <option value="محفظة جيب / كاش / شامل">محفظة إلكترونية (جيب / كاش)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- رفع السند -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-300">صورة سند التحويل أو إشعار الإيداع</label>
+                        <div class="border-2 border-dashed border-gray-700 hover:border-emerald-500/60 rounded-2xl p-4 text-center cursor-pointer transition bg-gray-850/60" onclick="document.getElementById('dep-file').click()">
+                            <input type="file" id="dep-file" accept="image/*" class="hidden" onchange="app.handleFilePreview(this)">
+                            
+                            <div id="upload-placeholder" class="space-y-1.5">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-gray-800 text-emerald-400 flex items-center justify-center text-lg">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <p class="text-xs font-bold text-white">انقر لالتقاط صورة السند أو اختيارها من الجهاز</p>
+                                <p class="text-[10px] text-gray-400">JPG, PNG (ترسل مباشرة إلى بوت التلجرام فوراً)</p>
+                            </div>
+
+                            <div id="upload-preview-container" class="hidden space-y-2">
+                                <img id="upload-preview-img" src="" alt="معاينة السند" class="max-h-40 mx-auto rounded-xl border border-gray-700 shadow-md">
+                                <p class="text-[11px] text-emerald-400 font-bold" id="preview-filename">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-300">ملاحظات إضافية (اختياري)</label>
+                        <input type="text" id="dep-notes" placeholder="رقم الحوالة أو أي تفاصيل إضافية..." class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <button type="submit" id="dep-submit-btn" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>تأكيد الإيداع وإرسال السند للإدارة</span>
+                    </button>
+
+                </form>
+            </div>
+
+        </section>
+
+        <!-- 3. واجهة كروتي المشتراة (My Cards View) -->
+        <section id="view-my-cards" class="page-view hidden space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                <div>
+                    <h1 class="text-base sm:text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-ticket text-amber-400"></i>
+                        <span>خزينة كروتي المشتراة</span>
+                    </h1>
+                    <p class="text-[11px] text-gray-400">كروت الواي فاي المشتراة مع الأرقام السرية (PIN) ورمز الـ QR</p>
+                </div>
+                <button onclick="app.navigate('shop')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> كرت جديد
+                </button>
+            </div>
+
+            <!-- شبكة عرض الكروت -->
+            <div id="my-cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                <!-- تحقن الكروت ديناميكياً -->
+            </div>
+
+        </section>
+
+        <!-- 4. واجهة كشف الحساب والسجل وتصدير PDF (History & Statements View) -->
+        <section id="view-history" class="page-view hidden space-y-4">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-2">
+                <div>
+                    <h1 class="text-base sm:text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-purple-400"></i>
+                        <span>كشف الحساب والعمليات المالية</span>
+                    </h1>
+                    <p class="text-[11px] text-gray-400">تتبع جميع الإيداعات، البونص المجاني 10%، ومشتريات الكروت</p>
+                </div>
+
+                <button onclick="app.exportCustomerStatementPDF()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 flex items-center justify-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-pdf text-purple-400"></i>
+                    <span>تصدير كشف الحساب (PDF / طباعة)</span>
+                </button>
+            </div>
+
+            <!-- تبويبات السجل -->
+            <div class="flex border-b border-gray-800 gap-1">
+                <button onclick="app.showHistoryTab('transactions')" id="tab-btn-transactions" class="px-3.5 py-2 text-xs font-bold border-b-2 border-emerald-500 text-emerald-400 transition">
+                    كشف حركات الرصيد والبونص
+                </button>
+                <button onclick="app.showHistoryTab('deposits')" id="tab-btn-deposits" class="px-3.5 py-2 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white transition">
+                    طلبات الإيداع والسندات
+                </button>
+            </div>
+
+            <!-- حاوية كشف الحساب القابلة للطباعة والتصدير -->
+            <div id="customer-statement-printable" class="space-y-4">
+                
+                <!-- جدول الحركات المالية -->
+                <div id="history-transactions-panel" class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">النوع</th>
+                                    <th class="p-3">البيان</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">الرصيد بعدها</th>
+                                    <th class="p-3">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الحركات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول طلبات الإيداع -->
+                <div id="history-deposits-panel" class="hidden bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">البنك</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">السند</th>
+                                    <th class="p-3">الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deposits-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الصفوف -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- 5. لوحة الإدارة العليا الشاملة (Admin View) -->
+        <section id="view-admin" class="page-view hidden space-y-5">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[10px] font-bold">
+                        <i class="fa-solid fa-crown"></i> الإدارة العامة: مشعل المريسي
+                    </div>
+                    <h1 class="text-lg sm:text-2xl font-black text-white mt-0.5">لوحة التحكم والتقارير المالية</h1>
+                </div>
+
+                <button onclick="app.testTelegramBot()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-500/10 text-sky-300 border border-sky-500/30 flex items-center justify-center gap-1.5">
+                    <i class="fa-brands fa-telegram text-sky-400"></i>
+                    <span>فحص البوت (@Croati_Bot)</span>
+                </button>
+            </div>
+
+            <!-- الإحصائيات العامة -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5" id="admin-stats-grid">
+                <!-- تحقن ديناميكياً -->
+            </div>
+
+            <!-- تبويبات الإدارة -->
+            <div class="flex flex-wrap border-b border-gray-800 gap-1 overflow-x-auto no-scrollbar">
+                <button onclick="app.showAdminTab('deposits')" id="admin-tab-btn-deposits" class="admin-tab active px-3.5 py-2 text-xs font-bold rounded-t-xl bg-gray-800 text-emerald-400 border-t-2 border-emerald-500 transition whitespace-nowrap">
+                    <i class="fa-solid fa-circle-arrow-down ml-1 text-emerald-400"></i> طلبات الإيداع (<span id="admin-pending-badge">0</span>)
+                </button>
+                <button onclick="app.showAdminTab('profit')" id="admin-tab-btn-profit" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-sack-dollar text-amber-400 ml-1"></i> الأرباح والمبيعات
+                </button>
+                <button onclick="app.showAdminTab('cards')" id="admin-tab-btn-cards" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-stacked text-teal-400 ml-1"></i> مستودع الكروت والمخزون
+                </button>
+                <button onclick="app.showAdminTab('users')" id="admin-tab-btn-users" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-users text-sky-400 ml-1"></i> العملاء والمستخدمين
+                </button>
+                <button onclick="app.showAdminTab('analytics')" id="admin-tab-btn-analytics" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-purple-400 ml-1"></i> تقارير الشبكات
+                </button>
+                <button onclick="app.showAdminTab('networks')" id="admin-tab-btn-networks" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-tower-broadcast text-gray-400 ml-1"></i> الشبكات
+                </button>
+                <button onclick="app.showAdminTab('banks')" id="admin-tab-btn-banks" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
+                    <i class="fa-solid fa-building-columns text-gray-400 ml-1"></i> البنوك
+                </button>
+            </div>
+
+            <!-- 1. طلبات الإيداع -->
+            <div id="admin-panel-deposits" class="space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-850 p-2.5 rounded-xl border border-gray-800">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[10px] font-bold text-gray-400">من:</span>
+                        <input type="date" id="dep-date-from" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-white">
+                        <span class="text-[10px] font-bold text-gray-400">إلى:</span>
+                        <input type="date" id="dep-date-to" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-white">
+                        <button onclick="app.loadAdminDeposits()" class="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-filter"></i> تصفية
+                        </button>
+                    </div>
+                    <div class="flex gap-1.5 overflow-x-auto">
+                        <button onclick="app.filterAdminDeposits('pending')" data-status-filter="pending" class="dep-filter active text-[10px] px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-bold">بانتظار الاعتماد</button>
+                        <button onclick="app.filterAdminDeposits('approved')" data-status-filter="approved" class="dep-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">المعتمدة</button>
+                        <button onclick="app.filterAdminDeposits('rejected')" data-status-filter="rejected" class="dep-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">المرفوضة</button>
+                        <button onclick="app.filterAdminDeposits('all')" data-status-filter="all" class="dep-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">الكل</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">السند</th>
+                                    <th class="p-3">المودع</th>
+                                    <th class="p-3">المبلغ</th>
+                                    <th class="p-3">البنك</th>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3 text-center">الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-deposits-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الطلبات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. قسم الأرباح والمبيعات الحصري للمدير العام -->
+            <div id="admin-panel-profit" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+                    <div>
+                        <h3 class="font-black text-white text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-sack-dollar text-amber-400"></i>
+                            <span>حساب الأرباح ومستحقات الشبكات (خاص بالمدير فقط)</span>
+                        </h3>
+                        <p class="text-[11px] text-gray-400">تتبع صافي الأرباح، إجمالي المبيعات، ومستحقات ملاك الشبكات مع إمكانية التصدير</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="app.openMasterNetworksReportModal()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>تقرير الأرباح المجمع (PDF)</span>
+                        </button>
+                        <button onclick="app.loadAdminProfitAnalytics()" class="px-2.5 py-1.5 rounded-xl bg-gray-800 text-gray-300 text-xs hover:text-white">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- شريط فلترة الأرباح بالتاريخ -->
+                <div class="flex items-center gap-2 bg-gray-850 p-2.5 rounded-xl border border-gray-800 flex-wrap">
+                    <span class="text-[10px] font-bold text-gray-300">الفترة من:</span>
+                    <input type="date" id="profit-date-from" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-white">
+                    <span class="text-[10px] font-bold text-gray-300">إلى:</span>
+                    <input type="date" id="profit-date-to" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-[10px] text-white">
+                    <button onclick="app.loadAdminProfitAnalytics()" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-[10px] flex items-center gap-1">
+                        <i class="fa-solid fa-filter"></i> تصفية الأرباح
+                    </button>
+                </div>
+
+                <!-- بطاقات إحصائيات الأرباح -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5" id="profit-summary-grid">
+                    <!-- تحقن ديناميكياً -->
+                </div>
+
+                <!-- جدول أرباح كل شبكة -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-md space-y-2 p-3.5">
+                    <h4 class="font-bold text-white text-xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-emerald-400"></i>
+                        <span>أرباح ومبيعات كل شبكة على حدة:</span>
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">الشبكة</th>
+                                    <th class="p-3">المباع</th>
+                                    <th class="p-3">المتبقي</th>
+                                    <th class="p-3">إجمالي المبيعات</th>
+                                    <th class="p-3">مستحقات الشبكة</th>
+                                    <th class="p-3">صافي ربح المدير</th>
+                                    <th class="p-3">هامش الربح</th>
+                                    <th class="p-3 text-center">كشف حساب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profit-networks-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الصفوف -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. مستودع الكروت والمخزون المفرز -->
+            <div id="admin-panel-cards" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
+                    <div>
+                        <h3 class="font-black text-white text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-boxes-stacked text-teal-400"></i>
+                            <span>مستودع الكروت والمخزون المفرز</span>
+                        </h3>
+                        <p class="text-[11px] text-gray-400">فرز وتصفية الكروت المباعة والمتاحة لكل شبكة وفئة على حدة</p>
+                    </div>
+
+                    <button onclick="app.openBulkCardsModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>تغذية كروت جديدة</span>
+                    </button>
+                </div>
+
+                <!-- شريط الفلاتر الذكي -->
+                <div class="bg-gray-850 p-3 rounded-2xl border border-gray-700/70 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">فرز بالشبكة:</label>
+                        <select id="inv-filter-network" onchange="app.handleInventoryNetworkChange(this.value)" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white">
+                            <option value="all">كافة الشبكات</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">فرز بالفئة / الباقة:</label>
+                        <select id="inv-filter-package" onchange="app.loadAdminCardsInventory()" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white">
+                            <option value="all">كافة الفئات والباقات</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">حالة الكرت:</label>
+                        <select id="inv-filter-status" onchange="app.loadAdminCardsInventory()" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white font-bold">
+                            <option value="all">كافة الكروت</option>
+                            <option value="sold">المباعة فقط</option>
+                            <option value="available">المتوفرة فقط</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">من تاريخ:</label>
+                        <input type="date" id="cards-filter-from" onchange="app.loadAdminCardsInventory()" class="w-full px-2 py-1.5 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1">إلى تاريخ:</label>
+                        <input type="date" id="cards-filter-to" onchange="app.loadAdminCardsInventory()" class="w-full px-2 py-1.5 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+
+                <!-- إحصائيات المستودع المفرز -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5" id="inv-metrics-grid">
+                    <!-- تحقن ديناميكياً -->
+                </div>
+
+                <!-- جدول الكروت التفصيلي -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">الشبكة</th>
+                                    <th class="p-3">فئة الكرت (الباقة)</th>
+                                    <th class="p-3">رقم الدخول (PIN)</th>
+                                    <th class="p-3">السيريال</th>
+                                    <th class="p-3">السعر</th>
+                                    <th class="p-3">ربح الكرت</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3">المشتري / التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inv-cards-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الكروت -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. العملاء والمستخدمين (مع التقارير المالية وكشوفات الحساب الفردية والمجمعة) -->
+            <div id="admin-panel-users" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
+                    <div>
+                        <h3 class="font-black text-white text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-users text-sky-400"></i>
+                            <span>سجل العملاء والملاك والتقارير المالية</span>
+                        </h3>
+                        <p class="text-[11px] text-gray-400">تتبع بيانات العملاء، إجمالي الإيداعات، البونص 10%، والمشتريات مع استخراج كشف حساب PDF</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="app.openMasterCustomersReportModal()" class="px-3.5 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-xs font-bold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>تقرير كافة العملاء المجمع (PDF)</span>
+                        </button>
+                        <button onclick="app.openAddUserModal()" class="px-3.5 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>إضافة مستخدم</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- فلترة المستخدمين -->
+                <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" id="admin-users-search" oninput="app.filterAdminUsersList(this.value)" placeholder="بحث بالاسم أو الهاتف أو المستخدم..." class="w-full pr-8 pl-3 py-1.5 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="app.filterUsersByRole('all')" data-user-role-filter="all" class="user-role-filter active text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500 text-gray-950 font-bold">الكل</button>
+                        <button onclick="app.filterUsersByRole('customer')" data-user-role-filter="customer" class="user-role-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">العملاء فقط</button>
+                        <button onclick="app.filterUsersByRole('network_owner')" data-user-role-filter="network_owner" class="user-role-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">ملاك الشبكات</button>
+                        <button onclick="app.filterUsersByRole('admin')" data-user-role-filter="admin" class="user-role-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">الإدارة</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-lg">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">الاسم والبيانات</th>
+                                    <th class="p-3">نوع الحساب</th>
+                                    <th class="p-3">الرصيد الحالي</th>
+                                    <th class="p-3">إجمالي الإيداعات</th>
+                                    <th class="p-3">بونص 10%</th>
+                                    <th class="p-3">الكروت المشتراة</th>
+                                    <th class="p-3">إجمالي المشتريات</th>
+                                    <th class="p-3 text-center">كشف الحساب</th>
+                                    <th class="p-3 text-center">تعديل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن المستخدمين -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. تقارير وكشوفات حساب الشبكات للمدير العام -->
+            <div id="admin-panel-analytics" class="hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-white text-xs sm:text-sm">إحصائيات ومبيعات كل شبكة على حدة</h3>
+                        <p class="text-[10px] text-gray-400">معرفة كم تبقى كروت لكل شبكة، كم بيعت، واستخراج كشف حساب PDF</p>
+                    </div>
+                    <button onclick="app.loadAdminNetworkAnalytics()" class="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 hover:text-white text-[10px]">
+                        <i class="fa-solid fa-arrows-rotate"></i> تحديث
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5" id="admin-analytics-grid">
+                    <!-- تحقن بطاقات الشبكات التفصيلية -->
+                </div>
+            </div>
+
+            <!-- 6. لوحة الشبكات -->
+            <div id="admin-panel-networks" class="hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white text-xs">الشبكات المسجلة</h3>
+                    <button onclick="app.openAddNetworkModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-gray-950 font-bold text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> إضافة شبكة
+                    </button>
+                </div>
+                <div id="admin-networks-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
+            </div>
+
+            <!-- 7. لوحة البنوك -->
+            <div id="admin-panel-banks" class="hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white text-xs">حسابات الإيداع</h3>
+                    <button onclick="app.openAddBankModal()" class="px-3 py-1.5 rounded-xl bg-amber-500 text-gray-950 font-bold text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> إضافة حساب
+                    </button>
+                </div>
+                <div id="admin-banks-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
+
+        </section>
+
+        <!-- 6. لوحة مالك الشبكة (Network Owner View) -->
+        <section id="view-owner" class="page-view hidden space-y-5">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
+                <div>
+                    <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[10px] font-bold">
+                        <i class="fa-solid fa-tower-broadcast"></i> لوحة مالك الشبكة
+                    </div>
+                    <h1 class="text-lg sm:text-2xl font-black text-white mt-0.5" id="owner-network-title">شبكتي</h1>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="app.navigate('deposit')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-500/20 border border-teal-500/40 text-teal-300 flex items-center gap-1.5 hover:bg-teal-500/30 transition">
+                        <i class="fa-solid fa-circle-arrow-down text-teal-400"></i>
+                        <span>طلب إيداع / شحن رصيد</span>
+                    </button>
+                    <button onclick="app.openBulkCardsModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-gray-950 flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>تغذية كروت للمخزون</span>
+                    </button>
+                    <button onclick="app.openAddPackageModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-800 border border-gray-700 text-gray-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-teal-400"></i>
+                        <span>إضافة باقة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- إحصائيات المالك -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5" id="owner-stats-grid">
+                <!-- تحقن ديناميكياً -->
+            </div>
+
+            <!-- باقات الشبكة -->
+            <div class="space-y-2.5">
+                <h3 class="font-bold text-white text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-box-open text-amber-400"></i>
+                    <span>باقات الشبكة الحالية</span>
+                </h3>
+                <div id="owner-packages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    <!-- تحقن الباقات -->
+                </div>
+            </div>
+
+            <!-- جدول المخزون المبوب -->
+            <div class="space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 class="font-bold text-white text-xs sm:text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-teal-400"></i>
+                        <span>مخزون الكروت والمبيعات حسب الفئة</span>
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <select id="owner-pkg-filter" onchange="app.loadOwnerCards()" class="px-2.5 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                            <option value="all">كافة الفئات</option>
+                        </select>
+                        <div class="flex gap-1">
+                            <button onclick="app.filterOwnerCards('all')" data-owner-card-filter="all" class="owner-card-filter active text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500 text-gray-950 font-bold">الكل</button>
+                            <button onclick="app.filterOwnerCards('available')" data-owner-card-filter="available" class="owner-card-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">المتاح</button>
+                            <button onclick="app.filterOwnerCards('sold')" data-owner-card-filter="sold" class="owner-card-filter text-[10px] px-2.5 py-1 rounded-lg bg-gray-800 text-gray-400 font-bold">المباع</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-md">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">#</th>
+                                    <th class="p-3">الباقة</th>
+                                    <th class="p-3">رمز الكرت (PIN)</th>
+                                    <th class="p-3">الرقم التسلسلي</th>
+                                    <th class="p-3">الحالة</th>
+                                    <th class="p-3">تاريخ البيع / الإضافة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="owner-cards-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن الكروت -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ==================== شريط التنقل السفلي للجوال (Bottom Navigation Bar) ==================== -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-lg border-t border-gray-800/90 mobile-bottom-nav">
+        <div id="mobile-bottom-nav-inner" class="mobile-nav-scroll-container h-14 px-2 gap-1 touch-pan-x">
+            <!-- تحقن ديناميكياً بحسب صلاحيات المستخدم -->
+        </div>
+    </nav>
+
+    <!-- ==================== النوافذ المنبثقة (MODALS) ==================== -->
+
+    <!-- 1. نافذة تسجيل الدخول / التسجيل -->
+    <div id="auth-modal" class="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl relative">
+            <button onclick="app.closeAuthModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex border-b border-gray-800 mb-4">
+                <button id="auth-tab-login" onclick="app.switchAuthTab('login')" class="flex-1 py-2.5 text-xs font-bold border-b-2 border-emerald-500 text-emerald-400 transition">
+                    تسجيل الدخول
+                </button>
+                <button id="auth-tab-register" onclick="app.switchAuthTab('register')" class="flex-1 py-2.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white transition">
+                    حساب جديد (بالإيميل)
+                </button>
+            </div>
+
+            <!-- تسجيل الدخول -->
+            <form id="login-form" onsubmit="app.handleLogin(event)" class="space-y-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">اسم المستخدم أو البريد</label>
+                    <input type="text" id="login-username" required placeholder="اسم المستخدم أو الإيميل" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">كلمة المرور</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition">
+                    تسجيل الدخول
+                </button>
+            </form>
+
+            <!-- حساب جديد مع التحقق عبر إيميل جوجل (OTP) -->
+            <form id="register-form" onsubmit="app.handleRegisterStepOne(event)" class="space-y-3 hidden">
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">الاسم الكامل</label>
+                    <input type="text" id="reg-fullname" required placeholder="محمد أحمد" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">بريد جوجل (Gmail)</label>
+                    <input type="email" id="reg-email" required placeholder="name@gmail.com" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">اسم المستخدم (إنجليزي)</label>
+                    <input type="text" id="reg-username" required placeholder="mohammed99" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">الهاتف</label>
+                    <input type="tel" id="reg-phone" placeholder="777000000" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">كلمة المرور</label>
+                    <input type="password" id="reg-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <button type="submit" id="reg-submit-btn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>إرسال كود التحقق وتفعيل الحساب</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. نافذة إدخال كود التحقق من الإيميل (OTP Verification Modal) -->
+    <div id="otp-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 sm:p-6 shadow-2xl relative text-center">
+            <button onclick="app.closeOtpModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-2">
+                <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <h3 class="text-base font-black text-white">تأكيد البريد الإلكتروني</h3>
+            <p class="text-[11px] text-gray-400 mt-1">أدخل رمز التحقق (OTP) المكون من 6 أرقام المرسل إلى بريدك:</p>
+            <p class="text-xs font-bold text-emerald-400 mt-0.5 font-mono" id="otp-target-email">--</p>
+
+            <form onsubmit="app.handleVerifyOtpSubmit(event)" class="mt-4 space-y-3">
+                <input type="text" id="otp-code-input" maxlength="6" required placeholder="0 0 0 0 0 0" class="w-full text-center tracking-widest text-2xl font-black font-mono py-2.5 bg-gray-950 border border-emerald-500/50 rounded-xl text-emerald-400 focus:outline-none focus:border-emerald-400">
+
+                <button type="submit" id="otp-verify-btn" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition">
+                    تأكيد وتفعيل الحساب
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. نافذة اعتماد الإيداع مع تعديل المبلغ وحساب البونص 10% (Admin Deposit Approval Modal) -->
+    <div id="deposit-approval-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeDepositApprovalModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-sm font-black text-white flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span>مراجعة واعتماد طلب الإيداع</span>
+            </h3>
+            <p class="text-[10px] text-gray-400 mb-3">يمكنك تعديل المبلغ الفعلي المودع وسيتم احتساب 10% بونص إضافي تلقائياً</p>
+
+            <!-- تفاصيل الطلب -->
+            <div class="bg-gray-850 p-3 rounded-xl border border-gray-700/80 space-y-1.5 text-xs">
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">المودع:</span>
+                    <span class="font-bold text-white" id="modal-appr-customer">--</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">البنك:</span>
+                    <span class="font-bold text-teal-400" id="modal-appr-bank">--</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">المبلغ المدخل من العميل:</span>
+                    <span class="font-mono font-bold text-gray-300" id="modal-appr-orig-amount">0 ر.ي</span>
+                </div>
+            </div>
+
+            <!-- صورة السند المصغرة مع زر التكبير -->
+            <div class="mt-2.5 p-2 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <img id="modal-appr-receipt-thumb" src="" alt="السند" class="w-12 h-12 rounded-lg object-cover border border-gray-700 cursor-pointer" onclick="app.viewReceiptModal(this.src, 'سند التحويل')">
+                    <span class="text-[11px] text-gray-400">انقر على الصورة لمعاينة السند بالحجم الكامل</span>
+                </div>
+                <button type="button" onclick="app.viewReceiptModal(document.getElementById('modal-appr-receipt-thumb').src, 'سند التحويل')" class="px-2.5 py-1 rounded-lg bg-gray-800 text-teal-400 text-xs font-bold">
+                    معاينة
+                </button>
+            </div>
+
+            <!-- نموذج تعديل المبلغ واعتماد البونص -->
+            <form onsubmit="app.confirmApproveDeposit(event)" class="mt-3 space-y-2.5">
+                <input type="hidden" id="modal-appr-dep-id">
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">المبلغ الفعلي المعتمد (ر.ي)</label>
+                    <input type="number" id="modal-appr-amount-input" oninput="app.calculateApprovalBonus(this.value)" min="1" required class="w-full px-3.5 py-2 bg-gray-950 border border-emerald-500 rounded-xl text-sm text-emerald-400 font-mono font-bold">
+                </div>
+
+                <!-- معاينة البونص التلقائي -->
+                <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 text-xs space-y-1">
+                    <div class="flex justify-between items-center text-emerald-300">
+                        <span>+ بونص مجاني 10%:</span>
+                        <span class="font-mono font-black" id="modal-appr-bonus-calc">+0 ر.ي</span>
+                    </div>
+                    <div class="flex justify-between items-center text-white border-t border-emerald-500/20 pt-1 font-bold">
+                        <span>إجمالي الرصيد الذي سيتم شحنه:</span>
+                        <span class="font-mono font-black text-emerald-400 text-sm" id="modal-appr-total-calc">0 ر.ي</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">ملاحظة للإشعار</label>
+                    <input type="text" id="modal-appr-note" placeholder="تم التحقق من السند وشحن الرصيد مع البونص" class="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+
+                <div class="flex gap-2 pt-1">
+                    <button type="submit" id="modal-appr-submit-btn" class="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition">
+                        تأكيد الاعتماد والشحن
+                    </button>
+                    <button type="button" onclick="app.closeDepositApprovalModal()" class="px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. نافذة كشف حساب الشبكة وطباعة التقرير (Network Statement Modal) -->
+    <div id="network-statement-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+            <button onclick="app.closeNetworkStatementModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs no-print">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-800 pb-3 mb-3 gap-2">
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-emerald-400"></i>
+                        <span id="net-stmt-title">كشف حساب شبكة</span>
+                    </h3>
+                    <p class="text-[10px] text-gray-400">تقرير تفصيلي بمبيعات وإيرادات كروت الشبكة</p>
+                </div>
+
+                <div class="flex items-center gap-2 no-print">
+                    <button onclick="app.downloadPDF('printable-network-statement', 'كشف_حساب_الشبكة.pdf')" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>تحميل PDF</span>
+                    </button>
+                    <button onclick="app.printElement('printable-network-statement')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط تصفية التاريخ لكشف حساب الشبكة -->
+            <div class="flex items-center gap-2 bg-gray-950 p-2 rounded-xl border border-gray-800 no-print flex-wrap mb-2">
+                <span class="text-[10px] font-bold text-gray-300">الفترة من:</span>
+                <input type="date" id="net-stmt-from" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <span class="text-[10px] font-bold text-gray-300">إلى:</span>
+                <input type="date" id="net-stmt-to" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <button onclick="app.filterNetworkStatementByDate()" class="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-filter"></i> تصفية
+                </button>
+            </div>
+
+            <!-- محتوى كشف الحساب القابل للطباعة والتصدير PDF -->
+            <div id="printable-network-statement" class="printable-statement flex-1 overflow-y-auto space-y-3 p-2 bg-gray-900 rounded-2xl">
+                <!-- ترويسة التقرير الرسمية -->
+                <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500 text-gray-950 flex items-center justify-center font-black">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-xs sm:text-sm">منصة محفظة كروت شبكات الواي فاي</h4>
+                            <p class="text-[10px] text-gray-400">الجمهورية اليمنية • كشف حساب مبيعات رسمي</p>
+                        </div>
+                    </div>
+                    <div class="text-left text-[10px] text-gray-400 font-mono">
+                        <span class="block text-gray-300 font-bold" id="net-stmt-date">--</span>
+                        <span>المدير: مشعل المريسي</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 bg-gray-850 p-3 rounded-xl border border-gray-800 text-xs">
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">إجمالي المبيعات:</span>
+                        <span class="font-black text-emerald-400 font-mono text-sm" id="net-stmt-total-sales">0 ر.ي</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">عدد الكروت المباعة:</span>
+                        <span class="font-black text-teal-300 text-sm" id="net-stmt-sold-count">0 كرت</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-gray-850 text-[10px] text-gray-400 uppercase">
+                            <tr>
+                                <th class="p-2.5">#</th>
+                                <th class="p-2.5">الباقة</th>
+                                <th class="p-2.5">السعر</th>
+                                <th class="p-2.5">رقم الكرت (PIN)</th>
+                                <th class="p-2.5">السيريال</th>
+                                <th class="p-2.5">المشتري</th>
+                                <th class="p-2.5">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="net-stmt-table-body" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                            <!-- تحقن الحركات -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.1 نافذة كشف حساب العميل الفردي (Customer Statement Modal - Admin & Customer) -->
+    <div id="customer-statement-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+            <button onclick="app.closeCustomerStatementModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs no-print">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-800 pb-3 mb-3 gap-2">
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-sky-400"></i>
+                        <span id="cust-stmt-title">كشف حساب العميل</span>
+                    </h3>
+                    <p class="text-[10px] text-gray-400">سجل مالي مفصل بكافة الإيداعات، البونص 10%، والكروت المشتراة</p>
+                </div>
+
+                <div class="flex items-center gap-2 no-print">
+                    <button onclick="app.downloadPDF('printable-customer-statement', 'كشف_حساب_عميل.pdf')" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>تحميل PDF</span>
+                    </button>
+                    <button onclick="app.printElement('printable-customer-statement')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط تصفية التاريخ لكشف حساب العميل -->
+            <div class="flex items-center gap-2 bg-gray-950 p-2 rounded-xl border border-gray-800 no-print flex-wrap mb-2">
+                <span class="text-[10px] font-bold text-gray-300">الفترة من:</span>
+                <input type="date" id="cust-stmt-from" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <span class="text-[10px] font-bold text-gray-300">إلى:</span>
+                <input type="date" id="cust-stmt-to" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <button onclick="app.filterCustomerStatementByDate()" class="px-3 py-1 rounded-lg bg-purple-500 hover:bg-purple-400 text-white font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-filter"></i> تصفية
+                </button>
+            </div>
+
+            <!-- محتوى كشف الحساب القابل للطباعة -->
+            <div id="printable-customer-statement" class="printable-statement flex-1 overflow-y-auto space-y-3.5 p-2 bg-gray-900 rounded-2xl">
+                <!-- ترويسة الحساب -->
+                <div class="p-3 bg-gray-950 rounded-xl border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-teal-400 text-gray-950 flex items-center justify-center font-black text-base shadow-sm">
+                            <span id="cust-stmt-initials">ع</span>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-xs sm:text-sm" id="cust-stmt-name">اسم العميل</h4>
+                            <p class="text-[10px] text-gray-400 font-mono" id="cust-stmt-meta">user@example.com • 777000000</p>
+                        </div>
+                    </div>
+                    <div class="text-right sm:text-left text-xs bg-gray-850 px-3 py-1.5 rounded-xl border border-gray-750">
+                        <span class="text-[10px] text-gray-400 block leading-none">الرصيد المالي الحالي</span>
+                        <span class="font-black text-emerald-400 font-mono text-sm sm:text-base" id="cust-stmt-balance">0 ر.ي</span>
+                    </div>
+                </div>
+
+                <!-- بطاقات إحصائيات العميل المالية -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-center" id="cust-stmt-stats">
+                    <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-400 block text-[10px]">إجمالي الإيداعات</span>
+                        <span class="font-black text-emerald-400 font-mono" id="cust-stmt-total-deposits">0 ر.ي</span>
+                    </div>
+                    <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-400 block text-[10px]">بونص 10% مجاني</span>
+                        <span class="font-black text-teal-300 font-mono" id="cust-stmt-total-bonus">+0 ر.ي</span>
+                    </div>
+                    <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-400 block text-[10px]">الكروت المشتراة</span>
+                        <span class="font-black text-amber-400" id="cust-stmt-cards-count">0 كرت</span>
+                    </div>
+                    <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-400 block text-[10px]">إجمالي المشتريات</span>
+                        <span class="font-black text-purple-400 font-mono" id="cust-stmt-total-spent">0 ر.ي</span>
+                    </div>
+                </div>
+
+                <!-- جدول الكروت المشتراة مع أرقام الـ PIN -->
+                <div class="space-y-1.5">
+                    <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-ticket text-amber-400"></i>
+                        <span>سجل الكروت المشتراة وأرقام الدخول (PINs):</span>
+                    </h5>
+                    <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-850 text-[10px] text-gray-400">
+                                <tr>
+                                    <th class="p-2">#</th>
+                                    <th class="p-2">الشبكة</th>
+                                    <th class="p-2">الباقة</th>
+                                    <th class="p-2">السعر</th>
+                                    <th class="p-2 font-mono">رقم الدخول (PIN)</th>
+                                    <th class="p-2">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cust-stmt-cards-tbody" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                                <!-- تحقن الكروت -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول حركات المحفظة المالية (دفتر الأستاذ) -->
+                <div class="space-y-1.5">
+                    <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-check text-sky-400"></i>
+                        <span>حركات الرصيد والمحفظة (Ledger):</span>
+                    </h5>
+                    <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-850 text-[10px] text-gray-400">
+                                <tr>
+                                    <th class="p-2">#</th>
+                                    <th class="p-2">البيان</th>
+                                    <th class="p-2">المبلغ</th>
+                                    <th class="p-2">الرصيد بعدها</th>
+                                    <th class="p-2">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cust-stmt-tx-tbody" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                                <!-- تحقن الحركات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.2 نافذة التقرير المالي المجمع (Master Consolidated Report Modal - PDF & Print) -->
+    <div id="master-report-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+            <button onclick="app.closeMasterReportModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs no-print">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-800 pb-3 mb-3 gap-2">
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-contract text-purple-400"></i>
+                        <span id="master-report-header-title">التقرير المالي المجمع</span>
+                    </h3>
+                    <p class="text-[10px] text-gray-400" id="master-report-header-sub">تقرير شامل لجميع السجلات والبيانات المالية</p>
+                </div>
+
+                <div class="flex items-center gap-2 no-print">
+                    <button onclick="app.downloadMasterReportPDF()" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-file-arrow-down"></i>
+                        <span>تصدير PDF للكمبيوتر والجوال</span>
+                    </button>
+                    <button onclick="app.printElement('printable-master-report')" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-print"></i>
+                        <span>طباعة</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- شريط تصفية التاريخ للتقرير المجمع -->
+            <div class="flex items-center gap-2 bg-gray-950 p-2 rounded-xl border border-gray-800 no-print flex-wrap mb-2">
+                <span class="text-[10px] font-bold text-gray-300">الفترة من:</span>
+                <input type="date" id="master-rep-from" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <span class="text-[10px] font-bold text-gray-300">إلى:</span>
+                <input type="date" id="master-rep-to" class="px-2 py-1 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <button onclick="app.filterMasterReportByDate()" class="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-filter"></i> تصفية
+                </button>
+            </div>
+
+            <!-- الحاوية المجمعة القابلة للطباعة والتصدير -->
+            <div id="printable-master-report" class="printable-report flex-1 overflow-y-auto space-y-3.5 p-2 bg-gray-900 rounded-2xl">
+                <!-- ترويسة التقرير الموحدة -->
+                <div class="p-3.5 bg-gray-950 rounded-xl border border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-gray-950 flex items-center justify-center font-black text-lg">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-sm" id="master-rep-doc-title">التقرير المالي الموحد - محفظة واي فاي اليمن</h4>
+                            <p class="text-[10px] text-gray-400" id="master-rep-doc-sub">كافة الحسابات والعمليات النشطة</p>
+                        </div>
+                    </div>
+                    <div class="text-left text-[10px] text-gray-400 font-mono">
+                        <span class="block text-white font-bold" id="master-rep-date">--</span>
+                        <span class="text-emerald-400 font-bold">المدير العام: مشعل المريسي</span>
+                    </div>
+                </div>
+
+                <!-- إحصائيات سريعة للتقرير المجمع -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs" id="master-rep-stats-grid">
+                    <!-- تحقن ديناميكياً -->
+                </div>
+
+                <!-- الجدول المالي الرئيسي -->
+                <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                    <table class="w-full text-right text-xs">
+                        <thead id="master-rep-table-head" class="bg-gray-850 text-[10px] text-gray-400 uppercase">
+                            <!-- تحقن الأعمدة ديناميكياً بحسب نوع التقرير -->
+                        </thead>
+                        <tbody id="master-rep-table-body" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                            <!-- تحقن الصفوف -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- تذييل التقرير -->
+                <div class="text-center pt-2 text-[10px] text-gray-500 border-t border-gray-800">
+                    تم إنشاء هذا التقرير آلياً عبر نظام إدارة محفظة شبكات الواي فاي • جميع الحقوق محفوظة
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. نافذة تأكيد شراء الكرت -->
+    <div id="buy-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeBuyModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="text-center space-y-1 mb-4">
+                <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-wifi"></i>
+                </div>
+                <h3 class="text-base font-black text-white">تأكيد شراء الكرت</h3>
+                <p class="text-[11px] text-gray-400">سيتم الخصم مباشرة من رصيد محفظتك</p>
+            </div>
+
+            <div class="bg-gray-800/60 rounded-xl p-3.5 border border-gray-700/60 space-y-2 text-xs">
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">الشبكة:</span>
+                    <span class="font-bold text-white" id="buy-net-name">--</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">الباقة:</span>
+                    <span class="font-bold text-white" id="buy-pkg-name">--</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-300">
+                    <span class="text-gray-400">المدة والبيانات:</span>
+                    <span class="font-bold text-teal-400" id="buy-duration">--</span>
+                </div>
+                <div class="border-t border-gray-700 pt-1.5 flex justify-between items-center">
+                    <span class="font-bold text-gray-200">السعر:</span>
+                    <span class="text-base font-black text-emerald-400" id="buy-price">0 ر.ي</span>
+                </div>
+            </div>
+
+            <div class="mt-3 bg-gray-950 p-2.5 rounded-xl border border-gray-800 flex justify-between items-center text-[11px]">
+                <div>
+                    <span class="text-gray-400 block">رصيدك:</span>
+                    <span class="font-bold text-gray-200" id="buy-current-balance">0 ر.ي</span>
+                </div>
+                <div class="text-left">
+                    <span class="text-gray-400 block">المتبقي:</span>
+                    <span class="font-bold" id="buy-balance-after">0 ر.ي</span>
+                </div>
+            </div>
+
+            <div class="mt-4 flex gap-2">
+                <button onclick="app.executeCardPurchase()" id="buy-confirm-btn" class="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-check"></i>
+                    <span>تأكيد الشراء</span>
+                </button>
+                <button onclick="app.closeBuyModal()" class="px-3 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. نافذة عرض الكرت المشتري ورمز الـ QR والطباعة -->
+    <div id="voucher-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-4 sm:p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeVoucherModal()" class="absolute top-3.5 left-3.5 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs no-print">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- الكرت على شكل تذكرة -->
+            <div id="printable-voucher" class="ticket-card rounded-2xl p-4 space-y-3.5 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500 text-gray-950 flex items-center justify-center text-xs font-bold">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-sm" id="vouch-net">زين نت</h4>
+                            <p class="text-[9px] text-emerald-400 font-bold" id="vouch-pkg">باقة 24 ساعة</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-black" id="vouch-price">300 ر.ي</span>
+                </div>
+
+                <!-- رقم الـ PIN الكبير -->
+                <div class="text-center py-2.5 bg-gray-950/90 rounded-xl border border-dashed border-emerald-500/40 space-y-0.5">
+                    <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">رمز الدخول (PIN)</span>
+                    <div class="text-2xl font-black text-emerald-400 tracking-widest font-mono select-all" id="vouch-pin">
+                        88997766
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-mono" id="vouch-serial">SN-001-9988</span>
+                </div>
+
+                <!-- QR Code -->
+                <div class="flex items-center justify-center">
+                    <div id="qrcode-container" class="p-1.5 bg-white rounded-xl shadow-inner inline-block"></div>
+                </div>
+
+                <p class="text-center text-[9px] text-gray-400">اتصل بالشبكة وسجل الدخول باستخدام رمز الـ PIN</p>
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="mt-3.5 grid grid-cols-3 gap-2 no-print">
+                <button onclick="app.copyVoucherPin()" class="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center justify-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>نسخ PIN</span>
+                </button>
+                <button onclick="app.printVoucher()" class="py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold text-xs flex items-center justify-center gap-1 border border-gray-700">
+                    <i class="fa-solid fa-print"></i>
+                    <span>طباعة</span>
+                </button>
+                <a id="vouch-login-btn" href="#" target="_blank" class="py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs flex items-center justify-center gap-1 text-center">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>دخول</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. نافذة عرض صورة السند (Admin) -->
+    <div id="receipt-preview-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-lg w-full p-4 shadow-2xl relative">
+            <button onclick="app.closeReceiptModal()" class="absolute top-3 left-3 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-3 flex items-center gap-1.5" id="receipt-modal-title">
+                صورة سند التحويل
+            </h3>
+            <div class="flex items-center justify-center bg-gray-950 rounded-xl p-2 max-h-[70vh] overflow-auto border border-gray-800">
+                <img id="receipt-full-image" src="" alt="سند التحويل" class="max-h-[65vh] w-auto object-contain rounded-lg">
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. نافذة تغذية كروت جديدة للمخزون -->
+    <div id="bulk-cards-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeBulkCardsModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-upload text-emerald-400"></i>
+                <span>تغذية كروت جديدة للمخزون</span>
+            </h3>
+
+            <form onsubmit="app.handleBulkCardsSubmit(event)" class="space-y-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-300">اختر الباقة</label>
+                    <select id="bulk-pkg-select" required class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white"></select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button type="button" onclick="app.setBulkMethod('auto')" id="bulk-method-auto" class="py-2 px-2 rounded-xl border text-[11px] font-bold bg-emerald-500/20 border-emerald-500 text-emerald-300">
+                        توليد تلقائي
+                    </button>
+                    <button type="button" onclick="app.setBulkMethod('paste')" id="bulk-method-paste" class="py-2 px-2 rounded-xl border text-[11px] font-bold bg-gray-800 border-gray-700 text-gray-400">
+                        لصق أرقام PIN
+                    </button>
+                </div>
+
+                <div id="bulk-auto-fields" class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">العدد</label>
+                        <input type="number" id="bulk-count" min="1" max="200" value="20" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">بادئة السيريال</label>
+                        <input type="text" id="bulk-prefix" value="SN" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+
+                <div id="bulk-paste-fields" class="hidden space-y-1">
+                    <label class="block text-[11px] font-bold text-gray-300">الصق الأكواد (سطر لكل كود)</label>
+                    <textarea id="bulk-pins-text" rows="4" placeholder="88991122&#10;77665544" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-mono"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md">
+                    إضافة للمخزون
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 9. نافذة تعديل الرصيد (Admin) -->
+    <div id="user-balance-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeBalanceModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-1">تعديل رصيد المستخدم</h3>
+            <p class="text-[10px] text-gray-400 mb-3" id="balance-modal-user-info">المستخدم: --</p>
+
+            <form onsubmit="app.handleBalanceAdjust(event)" class="space-y-2.5">
+                <input type="hidden" id="adj-user-id">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">نوع العملية</label>
+                    <select id="adj-action" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                        <option value="add">إضافة إلى الرصيد (+)</option>
+                        <option value="subtract">خصم من الرصيد (-)</option>
+                        <option value="set">تعيين رصيد (=)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">المبلغ (ر.ي)</label>
+                    <input type="number" id="adj-amount" min="1" required placeholder="500" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">ملاحظة</label>
+                    <input type="text" id="adj-note" placeholder="سبب التعديل..." class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs">
+                    حفظ التعديل
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. نافذة إضافة شبكة -->
+    <div id="add-network-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeAddNetworkModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-3">إضافة شبكة واي فاي جديدة</h3>
+            <form onsubmit="app.handleAddNetwork(event)" class="space-y-2.5">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">اسم الشبكة</label>
+                    <input type="text" id="net-name" required placeholder="شبكة الأمل نت" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">الوصف</label>
+                    <textarea id="net-desc" rows="2" placeholder="تغطية المنطقة..." class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">رابط صفحة الدخول</label>
+                    <input type="text" id="net-login-url" placeholder="http://alamal.wifi/login" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs mt-1">
+                    إضافة الشبكة
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 11. نافذة إضافة باقة -->
+    <div id="add-pkg-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeAddPackageModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-3">إضافة باقة جديدة</h3>
+            <form onsubmit="app.handleAddPackage(event)" class="space-y-2.5">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">اسم الباقة</label>
+                    <input type="text" id="pkg-name" required placeholder="باقة 12 ساعة" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">سعر البيع (ر.ي)</label>
+                        <input type="number" id="pkg-price" min="50" required placeholder="200" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-amber-400">سعر التكلفة (ر.ي)</label>
+                        <input type="number" id="pkg-cost-price" min="0" placeholder="170" class="w-full px-3 py-2 bg-gray-800 border border-amber-500/40 rounded-xl text-xs text-amber-300">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">المدة</label>
+                        <input type="text" id="pkg-duration" placeholder="12 ساعة" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">حجم البيانات</label>
+                        <input type="text" id="pkg-data-limit" placeholder="1.5 جيجابايت" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-black text-xs mt-1">
+                    حفظ الباقة
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 12. نافذة إضافة حساب بنكي -->
+    <div id="add-bank-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeAddBankModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-3">إضافة حساب بنكي للإيداع</h3>
+            <form onsubmit="app.handleAddBank(event)" class="space-y-2.5">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">اسم البنك</label>
+                    <input type="text" id="bank-input-name" required placeholder="بنك الشامل" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">رقم الحساب</label>
+                    <input type="text" id="bank-input-account" required placeholder="777000111" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">اسم صاحب الحساب</label>
+                    <input type="text" id="bank-input-holder" placeholder="محفظة كروت الواي فاي" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-black text-xs mt-1">
+                    إضافة الحساب
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 13. نافذة إضافة مستخدم -->
+    <div id="add-user-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeAddUserModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs font-bold text-white mb-3">إضافة مستخدم أو مالك شبكة</h3>
+            <form onsubmit="app.handleAddUser(event)" class="space-y-2.5">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">الاسم</label>
+                    <input type="text" id="usr-fullname" required placeholder="صالح اليماني" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">اسم المستخدم</label>
+                    <input type="text" id="usr-username" required placeholder="saleh9" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">البريد الإلكتروني</label>
+                    <input type="email" id="usr-email" placeholder="user@gmail.com" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">الهاتف</label>
+                        <input type="text" id="usr-phone" placeholder="777000000" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300">كلمة المرور</label>
+                        <input type="password" id="usr-password" required placeholder="••••••••" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300">نوع الحساب</label>
+                    <select id="usr-role" onchange="app.handleUserRoleChange(this.value)" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                        <option value="customer">عميل عادي</option>
+                        <option value="network_owner">مالك شبكة واي فاي</option>
+                        <option value="admin">مدير عام (Admin)</option>
+                    </select>
+                </div>
+                <div id="usr-network-select-wrap" class="hidden">
+                    <label class="block text-[11px] font-bold text-gray-300">الشبكة التابعة له</label>
+                    <select id="usr-network-id" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white"></select>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-black text-xs mt-1">
+                    إنشاء المستخدم
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 14. نافذة تعديل بيانات المستخدم والحساب (خاص بالمدير العام) -->
+    <div id="edit-user-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeEditUserModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs sm:text-sm font-black text-white mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-user-pen text-sky-400"></i>
+                <span>تعديل بيانات المستخدم والحساب</span>
+            </h3>
+            <form onsubmit="app.handleEditUserSubmit(event)" class="space-y-2.5">
+                <input type="hidden" id="edit-user-id">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">الاسم الكامل</label>
+                    <input type="text" id="edit-user-fullname" required class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">اسم المستخدم</label>
+                        <input type="text" id="edit-user-username" required class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">رقم الهاتف</label>
+                        <input type="text" id="edit-user-phone" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="edit-user-email" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">نوع الصلاحية</label>
+                        <select id="edit-user-role" onchange="app.handleEditUserRoleChange(this.value)" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-bold">
+                            <option value="customer">عميل عادي</option>
+                            <option value="network_owner">مالك شبكة</option>
+                            <option value="admin">مدير عام (Super Admin)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">الشبكة التابع لها</label>
+                        <select id="edit-user-network" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                            <option value="">لا يوجد (عام)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-amber-400 mb-1">تعيين كلمة سر جديدة (اختياري)</label>
+                    <input type="text" id="edit-user-password" placeholder="اترك الحقل فارغاً للإبقاء على كلمة السر الحالية" class="w-full px-3 py-2 bg-gray-800 border border-amber-500/40 rounded-xl text-xs text-amber-300">
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-gray-950 font-black text-xs mt-2 transition shadow-md">
+                    حفظ التعديلات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 15. نافذة تعديل بيانات الباقة (خاص بالمدير العام) -->
+    <div id="edit-pkg-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+            <button onclick="app.closeEditPackageModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xs sm:text-sm font-black text-white mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-teal-400"></i>
+                <span>تعديل بيانات فئة / باقة الكرت</span>
+            </h3>
+            <form onsubmit="app.handleEditPackageSubmit(event)" class="space-y-2.5">
+                <input type="hidden" id="edit-pkg-id">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">اسم الباقة</label>
+                    <input type="text" id="edit-pkg-name" required class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-emerald-400 mb-1">سعر البيع للمستخدم (ر.ي)</label>
+                        <input type="number" id="edit-pkg-price" min="1" required class="w-full px-3 py-2 bg-gray-800 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-amber-400 mb-1">سعر جملة الشراء (التكلفة ر.ي)</label>
+                        <input type="number" id="edit-pkg-cost-price" min="0" required class="w-full px-3 py-2 bg-gray-800 border border-amber-500/40 rounded-xl text-xs text-amber-300 font-bold">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">مدة الصلاحية</label>
+                        <input type="text" id="edit-pkg-duration" placeholder="مثلاً: 24 ساعة" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-300 mb-1">حجم البيانات</label>
+                        <input type="text" id="edit-pkg-data-limit" placeholder="مثلاً: 2 جيجابايت" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1">حالة الباقة</label>
+                    <select id="edit-pkg-active" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-bold">
+                        <option value="1">نشطة (متاحة في المتجر)</option>
+                        <option value="0">معطلة (مخفية مؤقتاً)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-gray-950 font-black text-xs mt-2 transition shadow-md">
+                    حفظ التعديلات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- حاوية التنبيهات العائمة (Toast Container) -->
+    <div id="toast-container" class="fixed top-4 left-4 right-4 sm:right-auto sm:max-w-sm z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- الجافاسكربت الرئيسي -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
