@@ -1,9 +1,0 @@
-__pycache__/
-*.pyc
-*.pyo
-cloudflared.exe
-*.zip
-*.tmp
-.env
-.DS_Store
-Thumbs.db
