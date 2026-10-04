@@ -1,2 +1,0 @@
-# تطبيق محفظة كروت الواي فاي يعمل بدون أي حزم خارجية (Zero External Dependencies)
-# Python 3.8+ Standard Libraries Only
