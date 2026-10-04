@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: yemen-wifi-wallet
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python server.py"
+    healthCheckPath: /api/auth/me
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
