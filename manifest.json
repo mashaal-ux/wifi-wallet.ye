@@ -1,0 +1,21 @@
+{
+  "name": "محفظة كروت الواي فاي",
+  "short_name": "واي فاي اليمن",
+  "description": "منصة شحن المحفظة وشراء كروت شبكات الواي فاي في اليمن",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/93/93158.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/93/93158.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
