@@ -1915,36 +1915,80 @@ select:focus, select option:checked {
         </div>
     </div>
 
-    <!-- 8. نافذة تغذية كروت جديدة للمخزون -->
+    <!-- 8. نافذة تغذية كروت جديدة للمخزون (Bulk Upload) -->
     <div id="bulk-cards-modal" class="fixed inset-0 z-50 bg-gray-950/85 backdrop-blur-sm hidden items-center justify-center p-4" style="display: none;">
-        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-sm w-full p-5 shadow-2xl relative text-right">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-md w-full p-5 shadow-2xl relative text-right">
             <button onclick="app.closeBulkCardsModal()" class="absolute top-4 left-4 w-7 h-7 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
             <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
-                <i class="fa-solid fa-upload text-emerald-400"></i>
-                <span>تغذية كروت جديدة للمخزون</span>
+                <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i>
+                <span>رفع وتغذية الكروت دفعة واحدة (Bulk Upload)</span>
             </h3>
 
-            <form onsubmit="app.handleBulkCardsSubmit(event)" class="space-y-3">
+            <form onsubmit="app.handleBulkCardsSubmit(event)" class="space-y-3.5">
                 <div class="space-y-1">
-                    <label class="block text-xs font-bold text-gray-300">اختر الباقة</label>
+                    <label class="block text-xs font-bold text-gray-300">اختر الباقة المراد تزويدها</label>
                     <select id="bulk-pkg-select" required class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white"></select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-1.5">
-                    <button type="button" onclick="app.setBulkMethod('auto')" id="bulk-method-auto" class="py-2 px-2 rounded-xl border text-[11px] font-bold bg-emerald-500/20 border-emerald-500 text-emerald-300">
-                        توليد تلقائي
-                    </button>
-                    <button type="button" onclick="app.setBulkMethod('paste')" id="bulk-method-paste" class="py-2 px-2 rounded-xl border text-[11px] font-bold bg-gray-800 border-gray-700 text-gray-400">
-                        لصق أرقام PIN
-                    </button>
+                <!-- أزرار اختيار طريقة الرفع (3 طرق أساسية + توليد سريع) -->
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-300 mb-1.5">طريقة الرفع والإضافة:</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button type="button" onclick="app.setBulkMethod('paste')" id="bulk-method-paste" class="py-2 px-1 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm">
+                            <i class="fa-solid fa-paste text-sm"></i>
+                            <span>لصق يدوي</span>
+                        </button>
+                        <button type="button" onclick="app.setBulkMethod('excel')" id="bulk-method-excel" class="py-2 px-1 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200">
+                            <i class="fa-solid fa-file-excel text-sm text-emerald-400"></i>
+                            <span>ملف إكسل</span>
+                        </button>
+                        <button type="button" onclick="app.setBulkMethod('pdf')" id="bulk-method-pdf" class="py-2 px-1 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200">
+                            <i class="fa-solid fa-file-pdf text-sm text-rose-400"></i>
+                            <span>ملف PDF</span>
+                        </button>
+                        <button type="button" onclick="app.setBulkMethod('auto')" id="bulk-method-auto" class="py-2 px-1 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200">
+                            <i class="fa-solid fa-wand-magic-sparkles text-sm text-amber-400"></i>
+                            <span>توليد سريع</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div id="bulk-auto-fields" class="grid grid-cols-2 gap-2">
+                <!-- 1. حقول اللصق اليدوي -->
+                <div id="bulk-paste-fields" class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-gray-300">الصق أكواد الكروت (كود في كل سطر):</label>
+                    <textarea id="bulk-pins-text" rows="5" placeholder="88991122&#10;77665544&#10;11223344,SN-001" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-mono placeholder:text-gray-600 focus:border-emerald-500 focus:outline-none"></textarea>
+                    <p class="text-[10px] text-gray-400">يدعم كتابة كود الكرت PIN فقط، أو (PIN,Serial) مفصولين بمسافة أو فاصلة.</p>
+                </div>
+
+                <!-- 2. حقول ملف Excel -->
+                <div id="bulk-excel-fields" class="hidden space-y-2">
+                    <label class="block text-[11px] font-bold text-gray-300">رفع ملف Excel (.xlsx أو .xls):</label>
+                    <div class="border-2 border-dashed border-gray-700 hover:border-emerald-500/60 rounded-2xl p-4 text-center bg-gray-800/40 transition cursor-pointer" onclick="document.getElementById('bulk-excel-file').click()">
+                        <i class="fa-solid fa-file-excel text-3xl text-emerald-400 mb-2 block"></i>
+                        <p class="text-xs text-white font-bold" id="bulk-excel-filename">انقر لاختيار ملف إكسل (.xlsx / .xls)</p>
+                        <p class="text-[10px] text-gray-400 mt-1">يقرأ الأكواد تلقائياً من أول عمود أو عمود PIN / Code</p>
+                        <input type="file" id="bulk-excel-file" accept=".xlsx, .xls" class="hidden" onchange="app.handleBulkFileChange(this, 'bulk-excel-filename')">
+                    </div>
+                </div>
+
+                <!-- 3. حقول ملف PDF -->
+                <div id="bulk-pdf-fields" class="hidden space-y-2">
+                    <label class="block text-[11px] font-bold text-gray-300">رفع ملف PDF كروت الشبكة (.pdf):</label>
+                    <div class="border-2 border-dashed border-gray-700 hover:border-rose-500/60 rounded-2xl p-4 text-center bg-gray-800/40 transition cursor-pointer" onclick="document.getElementById('bulk-pdf-file').click()">
+                        <i class="fa-solid fa-file-pdf text-3xl text-rose-400 mb-2 block"></i>
+                        <p class="text-xs text-white font-bold" id="bulk-pdf-filename">انقر لاختيار ملف PDF الكروت</p>
+                        <p class="text-[10px] text-gray-400 mt-1">يقوم النظام باستخراج كافة الأكواد والأرقام التسلسلية من ملف الـ PDF بذكاء</p>
+                        <input type="file" id="bulk-pdf-file" accept=".pdf" class="hidden" onchange="app.handleBulkFileChange(this, 'bulk-pdf-filename')">
+                    </div>
+                </div>
+
+                <!-- 4. حقول التوليد السريع -->
+                <div id="bulk-auto-fields" class="hidden grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-300">العدد</label>
+                        <label class="block text-[11px] font-bold text-gray-300">العدد المطلوب</label>
                         <input type="number" id="bulk-count" min="1" max="200" value="20" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white">
                     </div>
                     <div>
@@ -1953,13 +1997,13 @@ select:focus, select option:checked {
                     </div>
                 </div>
 
-                <div id="bulk-paste-fields" class="hidden space-y-1">
-                    <label class="block text-[11px] font-bold text-gray-300">الصق الأكواد (سطر لكل كود)</label>
-                    <textarea id="bulk-pins-text" rows="4" placeholder="88991122&#10;77665544" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-mono"></textarea>
+                <div class="p-2.5 rounded-xl bg-gray-800/70 border border-gray-700/60 text-[10px] text-gray-300 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-check text-emerald-400 text-sm"></i>
+                    <span>النظام يفحص التكرار تلقائياً ويمنع إضافة أي كود كرت موجود مسبقاً في قاعدة البيانات.</span>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md">
-                    إضافة للمخزون
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs shadow-md transition active:scale-95 cursor-pointer">
+                    حفظ وإضافة الكروت لقاعدة البيانات
                 </button>
             </form>
         </div>
@@ -5044,9 +5088,9 @@ const app = {
         } catch (e) {}
     },
 
-    openBulkCardsModal: function () {
+    openBulkCardsModal: function (targetPackageId = null) {
         const select = document.getElementById('bulk-pkg-select');
-        select.innerHTML = '';
+        select.innerHTML = '<option value="">-- اختر الباقة المراد تزويدها بالكروت --</option>';
         
         let pkgs = [];
         if (this.state.currentUser && this.state.currentUser.role === 'admin') {
@@ -5060,59 +5104,145 @@ const app = {
         }
 
         pkgs.forEach(p => {
-            select.innerHTML += `<option value="${p.id}">${p.netName ? p.netName + ' - ' : ''}${p.name} (${Number(p.price).toLocaleString()} ر.ي)</option>`;
+            const isSelected = targetPackageId && String(p.id) === String(targetPackageId);
+            select.innerHTML += `<option value="${p.id}" ${isSelected ? 'selected' : ''}>${p.netName ? p.netName + ' - ' : ''}${p.name} (${Number(p.price).toLocaleString()} ر.ي)</option>`;
         });
-        
+
+        // تصفير مدخلات النوافذ
+        if (document.getElementById('bulk-pins-text')) document.getElementById('bulk-pins-text').value = '';
+        if (document.getElementById('bulk-excel-file')) document.getElementById('bulk-excel-file').value = '';
+        if (document.getElementById('bulk-excel-filename')) document.getElementById('bulk-excel-filename').textContent = 'انقر لاختيار ملف إكسل (.xlsx / .xls)';
+        if (document.getElementById('bulk-pdf-file')) document.getElementById('bulk-pdf-file').value = '';
+        if (document.getElementById('bulk-pdf-filename')) document.getElementById('bulk-pdf-filename').textContent = 'انقر لاختيار ملف كروت الشبكة (.pdf)';
+
+        this.setBulkMethod('paste');
         this.openModal('bulk-cards-modal');
     },
 
     closeBulkCardsModal: function () { this.closeModal('bulk-cards-modal'); },
 
+    handleBulkFileChange: function (input, labelId) {
+        const label = document.getElementById(labelId);
+        if (input.files && input.files[0]) {
+            const f = input.files[0];
+            label.textContent = `📁 ${f.name} (${(f.size / 1024).toFixed(1)} KB)`;
+        }
+    },
+
     setBulkMethod: function (method) {
         this.state.bulkMethod = method;
-        const autoBtn = document.getElementById('bulk-method-auto');
-        const pasteBtn = document.getElementById('bulk-method-paste');
-        const autoFields = document.getElementById('bulk-auto-fields');
-        const pasteFields = document.getElementById('bulk-paste-fields');
+        const methods = ['paste', 'excel', 'pdf', 'auto'];
 
-        if (method === 'auto') {
-            autoBtn.className = 'py-2 px-2 rounded-xl border text-[11px] font-bold bg-emerald-500/20 border-emerald-500 text-emerald-300';
-            pasteBtn.className = 'py-2 px-2 rounded-xl border text-[11px] font-bold bg-gray-800 border-gray-700 text-gray-400';
-            autoFields.classList.remove('hidden');
-            pasteFields.classList.add('hidden');
-        } else {
-            pasteBtn.className = 'py-2 px-2 rounded-xl border text-[11px] font-bold bg-emerald-500/20 border-emerald-500 text-emerald-300';
-            autoBtn.className = 'py-2 px-2 rounded-xl border text-[11px] font-bold bg-gray-800 border-gray-700 text-gray-400';
-            pasteFields.classList.remove('hidden');
-            autoFields.classList.add('hidden');
-        }
+        methods.forEach(m => {
+            const btn = document.getElementById(`bulk-method-${m}`);
+            const fields = document.getElementById(`bulk-${m}-fields`);
+            if (btn) {
+                if (m === method) {
+                    btn.className = 'py-2 px-1.5 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm';
+                } else {
+                    btn.className = 'py-2 px-1.5 rounded-xl border text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200';
+                }
+            }
+            if (fields) {
+                if (m === method) {
+                    fields.classList.remove('hidden');
+                } else {
+                    fields.classList.add('hidden');
+                }
+            }
+        });
     },
 
     handleBulkCardsSubmit: async function (e) {
         e.preventDefault();
         const package_id = document.getElementById('bulk-pkg-select').value;
-        const method = this.state.bulkMethod;
-        const generate_count = document.getElementById('bulk-count').value;
-        const prefix = document.getElementById('bulk-prefix').value;
-        const pins_text = document.getElementById('bulk-pins-text').value;
+        if (!package_id) {
+            this.toast('error', 'يرجى اختيار الباقة أولاً');
+            return;
+        }
+
+        const method = this.state.bulkMethod || 'paste';
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const origText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i> جاري فحص وإضافة الكروت...';
+        }
 
         try {
-            const res = await this.apiFetch('/api/network-owner/cards/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ package_id, method, generate_count, prefix, pins_text })
-            });
+            let res;
+            if (method === 'excel') {
+                const fileInput = document.getElementById('bulk-excel-file');
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    this.toast('error', 'يرجى اختيار ملف Excel بصيغة .xlsx أو .xls');
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
+                    return;
+                }
+                const fd = new FormData();
+                fd.append('package_id', package_id);
+                fd.append('method', 'excel');
+                fd.append('excel_file', fileInput.files[0]);
+
+                res = await fetch('/api/network-owner/cards/bulk', {
+                    method: 'POST',
+                    body: fd
+                });
+            } else if (method === 'pdf') {
+                const fileInput = document.getElementById('bulk-pdf-file');
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    this.toast('error', 'يرجى اختيار ملف PDF يحتوي على كروت الشبكة');
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
+                    return;
+                }
+                const fd = new FormData();
+                fd.append('package_id', package_id);
+                fd.append('method', 'pdf');
+                fd.append('pdf_file', fileInput.files[0]);
+
+                res = await fetch('/api/network-owner/cards/bulk', {
+                    method: 'POST',
+                    body: fd
+                });
+            } else if (method === 'paste') {
+                const pins_text = document.getElementById('bulk-pins-text').value;
+                if (!pins_text.trim()) {
+                    this.toast('error', 'يرجى لصق أكواد الكروت في الحقل أولاً');
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = origText; }
+                    return;
+                }
+                res = await this.apiFetch('/api/network-owner/cards/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ package_id, method: 'paste', pins_text })
+                });
+            } else if (method === 'auto') {
+                const count = document.getElementById('bulk-count').value;
+                const prefix = document.getElementById('bulk-prefix').value;
+                res = await this.apiFetch('/api/network-owner/cards/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ package_id, method: 'auto', count, prefix })
+                });
+            }
+
             const data = await res.json();
             if (data.success) {
                 this.toast('success', data.message);
                 this.closeBulkCardsModal();
                 if (this.state.currentView === 'owner') this.loadOwnerDashboard();
+                if (this.state.currentView === 'admin-profit') this.loadAdminCardsInventory();
                 this.loadShopNetworks();
             } else {
-                this.toast('error', data.message);
+                this.toast('error', data.message || 'حدث خطأ في إضافة الكروت');
             }
-        } catch (e) {
-            this.toast('error', 'فشل في إضافة الكروت');
+        } catch (err) {
+            console.error('[Bulk Upload Error]:', err);
+            this.toast('error', 'فشل في رفع وإضافة الكروت، يرجى التحقق من اتصالك');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origText;
+            }
         }
     },
 
