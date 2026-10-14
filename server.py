@@ -1794,10 +1794,18 @@ def serve_static(filename):
 
 # ==================== نقطة الإقلاع والتشغيل ====================
 
-def run_server():
+# تشغيل التهيئة التلقائية ومستمع تيليجرام لضمان العمل تحت كافة خوادم الويب (Gunicorn / Docker / Direct Python)
+try:
     seed_initial_database()
-    start_telegram_listener()
+except Exception as e:
+    print("[Startup DB Init Warning]:", e)
 
+try:
+    start_telegram_listener()
+except Exception as e:
+    print("[Startup Telegram Warning]:", e)
+
+def run_server():
     print("=" * 65)
     print(f"🚀 خادم محفظة كروت الواي فاي (اليمن) يعمل الآن بنجاح على المنفذ {PORT}")
     print(f"🗄️ محرك البيانات: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
