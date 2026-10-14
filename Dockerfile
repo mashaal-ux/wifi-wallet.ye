@@ -5,6 +5,9 @@ WORKDIR /app
 # نسخ ملفات المشروع
 COPY . /app
 
+# تثبيت الحزم المطلوبة
+RUN pip install --no-cache-dir -r requirements.txt
+
 # تهيئة المنفذ
 EXPOSE 3000
 
