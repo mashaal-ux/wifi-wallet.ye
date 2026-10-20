@@ -9,10 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # نسخ جميع ملفات المشروع
 COPY . /app
 
-# تهيئة المنفذ
-EXPOSE 3000
+# تهيئة المنفذ المتوافق مع Railway و Render
+EXPOSE 8080
 
-ENV PORT=3000
 ENV PYTHONUNBUFFERED=1
 
 # أمر تشغيل الخادم
