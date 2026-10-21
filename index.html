@@ -711,10 +711,16 @@ select:focus, select option:checked {
                     <h1 class="text-lg sm:text-2xl font-black text-white mt-0.5">لوحة التحكم والتقارير المالية</h1>
                 </div>
 
-                <button onclick="app.testTelegramBot()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-500/10 text-sky-300 border border-sky-500/30 flex items-center justify-center gap-1.5">
-                    <i class="fa-brands fa-telegram text-sky-400"></i>
-                    <span>فحص البوت (@Croati_Bot)</span>
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="app.openUnifiedPayoutModal()" id="btn-open-unified-payout-main" class="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-gray-950 shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                        <span>صرف وتسوية مستحقات / أرباح</span>
+                    </button>
+                    <button onclick="app.testTelegramBot()" class="px-3 py-2 rounded-xl text-xs font-bold bg-sky-500/10 text-sky-300 border border-sky-500/30 flex items-center justify-center gap-1.5">
+                        <i class="fa-brands fa-telegram text-sky-400"></i>
+                        <span>فحص البوت (@Croati_Bot)</span>
+                    </button>
+                </div>
             </div>
 
             <!-- الإحصائيات العامة -->
@@ -728,7 +734,7 @@ select:focus, select option:checked {
                     <i class="fa-solid fa-circle-arrow-down ml-1 text-emerald-400"></i> طلبات الإيداع (<span id="admin-pending-badge">0</span>)
                 </button>
                 <button onclick="app.showAdminTab('profit')" id="admin-tab-btn-profit" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
-                    <i class="fa-solid fa-sack-dollar text-amber-400 ml-1"></i> الأرباح والمبيعات
+                    <i class="fa-solid fa-sack-dollar text-amber-400 ml-1"></i> الأرباح والمبيعات والتسويات
                 </button>
                 <button onclick="app.showAdminTab('cards')" id="admin-tab-btn-cards" class="admin-tab px-3.5 py-2 text-xs font-bold rounded-t-xl text-gray-400 hover:text-white transition whitespace-nowrap">
                     <i class="fa-solid fa-boxes-stacked text-teal-400 ml-1"></i> مستودع الكروت والمخزون
@@ -790,17 +796,21 @@ select:focus, select option:checked {
                 </div>
             </div>
 
-            <!-- 2. قسم الأرباح والمبيعات الحصري للمدير العام -->
+            <!-- 2. قسم الأرباح والمبيعات والتسويات الحصري للمدير العام -->
             <div id="admin-panel-profit" class="hidden space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
                     <div>
                         <h3 class="font-black text-white text-sm sm:text-base flex items-center gap-2">
                             <i class="fa-solid fa-sack-dollar text-amber-400"></i>
-                            <span>حساب الأرباح ومستحقات الشبكات (خاص بالمدير فقط)</span>
+                            <span>حساب الأرباح ومستحقات الشبكات والتسويات المالية (خاص بالمدير العام)</span>
                         </h3>
-                        <p class="text-[11px] text-gray-400">تتبع صافي الأرباح، إجمالي المبيعات، ومستحقات ملاك الشبكات مع إمكانية التصدير</p>
+                        <p class="text-[11px] text-gray-400">تتبع صافي الأرباح، مستحقات ملاك الشبكات، وإجمالي المسحوبات والتسويات المسلمة مع التصدير</p>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="app.openUnifiedPayoutModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center gap-1.5 shadow-md transition active:scale-95">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                            <span>صرف وتسوية مستحقات / أرباح</span>
+                        </button>
                         <button onclick="app.openMasterNetworksReportModal()" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-file-pdf"></i>
                             <span>تقرير الأرباح المجمع (PDF)</span>
@@ -822,8 +832,8 @@ select:focus, select option:checked {
                     </button>
                 </div>
 
-                <!-- بطاقات إحصائيات الأرباح -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5" id="profit-summary-grid">
+                <!-- بطاقات إحصائيات الأرباح والمسحوبات -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-2.5" id="profit-summary-grid">
                     <!-- تحقن ديناميكياً -->
                 </div>
 
@@ -831,7 +841,7 @@ select:focus, select option:checked {
                 <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-md space-y-2 p-3.5">
                     <h4 class="font-bold text-white text-xs flex items-center gap-1.5">
                         <i class="fa-solid fa-layer-group text-emerald-400"></i>
-                        <span>أرباح ومبيعات كل شبكة على حدة:</span>
+                        <span>أرباح ومبيعات ومستحقات كل شبكة على حدة:</span>
                     </h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-right text-xs">
@@ -841,14 +851,74 @@ select:focus, select option:checked {
                                     <th class="p-3">المباع</th>
                                     <th class="p-3">المتبقي</th>
                                     <th class="p-3">إجمالي المبيعات</th>
-                                    <th class="p-3">مستحقات الشبكة</th>
+                                    <th class="p-3">إجمالي مستحقات الشبكة</th>
+                                    <th class="p-3">المسلم فعلياً</th>
+                                    <th class="p-3">الرصيد المتاح للصرف</th>
                                     <th class="p-3">صافي ربح المدير</th>
-                                    <th class="p-3">هامش الربح</th>
-                                    <th class="p-3 text-center">كشف حساب</th>
+                                    <th class="p-3 text-center">إجراءات / كشف</th>
                                 </tr>
                             </thead>
                             <tbody id="profit-networks-table-body" class="divide-y divide-gray-800 text-gray-300">
                                 <!-- تحقن الصفوف -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول سجل وأرشيف سندات الصرف والتسويات المسلمة (Unified Payouts & Settlements Archive) -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-md space-y-3 p-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-2.5">
+                        <div>
+                            <h4 class="font-black text-white text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-file-invoice-dollar text-rose-400"></i>
+                                <span>سجل وأرشيف جميع السندات والتحويلات المصروفة (إجمالي المسحوبات والتسويات المسلمة)</span>
+                            </h4>
+                            <p class="text-[10px] text-gray-400">أرشيف موحد يوثق كافة مسحوبات أرباح المنصة وتسويات ملاك الشبكات مع صور السندات وأرقام الحوالات</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <label class="text-[10px] font-bold text-gray-300">الفرز حسب المستفيد:</label>
+                            <select id="payouts-archive-beneficiary-filter" onchange="app.loadAdminPayoutsArchive()" class="px-3 py-1.5 bg-gray-850 border border-gray-700 rounded-xl text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                                <option value="all">كافة المستفيدين (المدير العام + ملاك الشبكات)</option>
+                            </select>
+                            <button onclick="app.openUnifiedPayoutModal()" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> سند صرف جديد
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ملخص سريع لإجمالي المسحوبات والتسويات المسلمة -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs" id="payouts-archive-summary-bar">
+                        <div class="bg-gray-850/90 border border-rose-500/20 rounded-xl p-2.5 flex items-center justify-between">
+                            <span class="text-gray-400 text-[11px] font-bold">إجمالي المسحوبات والتسويات المسلمة:</span>
+                            <span class="font-black text-rose-400 font-mono text-sm" id="archive-total-disbursed">0 ر.ي</span>
+                        </div>
+                        <div class="bg-gray-850/90 border border-amber-500/20 rounded-xl p-2.5 flex items-center justify-between">
+                            <span class="text-gray-400 text-[11px] font-bold">مسحوبات أرباح المدير العام:</span>
+                            <span class="font-black text-amber-400 font-mono text-sm" id="archive-admin-disbursed">0 ر.ي</span>
+                        </div>
+                        <div class="bg-gray-850/90 border border-teal-500/20 rounded-xl p-2.5 flex items-center justify-between">
+                            <span class="text-gray-400 text-[11px] font-bold">تسويات ملاك الشبكات المسلمة:</span>
+                            <span class="font-black text-teal-300 font-mono text-sm" id="archive-networks-disbursed">0 ر.ي</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-800/80 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-3">التاريخ</th>
+                                    <th class="p-3">المستفيد</th>
+                                    <th class="p-3">المبلغ المصروف</th>
+                                    <th class="p-3">الرصيد المتبقي بعدها</th>
+                                    <th class="p-3">وسيلة الدفع</th>
+                                    <th class="p-3">رقم السند / الحوالة</th>
+                                    <th class="p-3">السند المرفق</th>
+                                    <th class="p-3">الملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-payouts-table-body" class="divide-y divide-gray-800 text-gray-300">
+                                <!-- تحقن سندات الصرف -->
                             </tbody>
                         </table>
                     </div>
@@ -1382,34 +1452,74 @@ select:focus, select option:checked {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 bg-gray-850 p-3 rounded-xl border border-gray-800 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-gray-850 p-3 rounded-xl border border-gray-800 text-xs">
                     <div>
-                        <span class="text-gray-400 block text-[10px]">إجمالي المبيعات:</span>
+                        <span class="text-gray-400 block text-[10px]">إجمالي المبيعات (<span id="net-stmt-sold-count">0 كرت</span>):</span>
                         <span class="font-black text-emerald-400 font-mono text-sm" id="net-stmt-total-sales">0 ر.ي</span>
                     </div>
                     <div>
-                        <span class="text-gray-400 block text-[10px]">عدد الكروت المباعة:</span>
-                        <span class="font-black text-teal-300 text-sm" id="net-stmt-sold-count">0 كرت</span>
+                        <span class="text-gray-400 block text-[10px]">إجمالي مستحقات الشبكة:</span>
+                        <span class="font-black text-teal-300 font-mono text-sm" id="net-stmt-owner-dues">0 ر.ي</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">إجمالي المسحوبات المسلمة:</span>
+                        <span class="font-black text-rose-400 font-mono text-sm" id="net-stmt-disbursed">0 ر.ي</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">الرصيد المتاح للصرف حالياً:</span>
+                        <span class="font-black text-amber-400 font-mono text-sm" id="net-stmt-available-balance">0 ر.ي</span>
                     </div>
                 </div>
 
-                <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-gray-850 text-[10px] text-gray-400 uppercase">
-                            <tr>
-                                <th class="p-2.5">#</th>
-                                <th class="p-2.5">الباقة</th>
-                                <th class="p-2.5">السعر</th>
-                                <th class="p-2.5">رقم الكرت (PIN)</th>
-                                <th class="p-2.5">السيريال</th>
-                                <th class="p-2.5">المشتري</th>
-                                <th class="p-2.5">التاريخ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="net-stmt-table-body" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
-                            <!-- تحقن الحركات -->
-                        </tbody>
-                    </table>
+                <!-- كشف حركات المستحقات والمسحوبات (Transactions Ledger) -->
+                <div class="space-y-1.5">
+                    <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-bookmark text-amber-400"></i>
+                        <span>كشف الحساب المالي (حركات المستحقات وصرف الأرباح - Transactions Ledger):</span>
+                    </h5>
+                    <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-850 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-2.5">البند</th>
+                                    <th class="p-2.5">رقم السند / المرجع</th>
+                                    <th class="p-2.5">البيان والتفاصيل</th>
+                                    <th class="p-2.5">المبلغ</th>
+                                    <th class="p-2.5">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="net-stmt-ledger-tbody" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                                <!-- تحقن حركات دفتر الأستاذ -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- جدول تفاصيل الكروت المباعة -->
+                <div class="space-y-1.5">
+                    <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-ticket text-emerald-400"></i>
+                        <span>تفاصيل الكروت المباعة:</span>
+                    </h5>
+                    <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-gray-850 text-[10px] text-gray-400 uppercase">
+                                <tr>
+                                    <th class="p-2.5">#</th>
+                                    <th class="p-2.5">الباقة</th>
+                                    <th class="p-2.5">سعر البيع</th>
+                                    <th class="p-2.5">مستحق الشبكة</th>
+                                    <th class="p-2.5">رقم الكرت (PIN)</th>
+                                    <th class="p-2.5">السيريال</th>
+                                    <th class="p-2.5">المشتري</th>
+                                    <th class="p-2.5">التاريخ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="net-stmt-table-body" class="divide-y divide-gray-800 text-gray-300 text-[11px]">
+                                <!-- تحقن الحركات -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2236,6 +2346,143 @@ select:focus, select option:checked {
                     </button>
                     <button type="button" onclick="app.deletePackageFromModal()" class="px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center gap-1">
                         <i class="fa-solid fa-trash-can"></i> حذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 16. النافذة الموحدة لصرف وتسوية المستحقات والأرباح (Unified Payout & Settlement Modal - Admin Only) -->
+    <div id="unified-payout-modal" class="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-md hidden items-center justify-center p-4" style="display: none;">
+        <div class="bg-gray-900 border border-gray-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative text-right max-h-[94vh] overflow-y-auto">
+            <button onclick="app.closeUnifiedPayoutModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-gray-800 text-gray-400 hover:text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-3 border-b border-gray-800 pb-3.5 mb-4">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-gray-950 flex items-center justify-center text-lg font-black shadow-md flex-shrink-0">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-white">صرف وتسوية مستحقات / أرباح</h3>
+                    <p class="text-[11px] text-gray-400">نافذة موحدة لصرف أرباح المنصة للمدير العام وتسوية مستحقات ملاك الشبكات</p>
+                </div>
+            </div>
+
+            <form id="unified-payout-form" onsubmit="app.handleUnifiedPayoutSubmit(event)" class="space-y-3.5">
+                <!-- 1. القائمة المنسدلة لاختيار المستفيد -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-200">
+                        <i class="fa-solid fa-user-tie text-emerald-400 ml-1"></i>
+                        <span>اختيار المستفيد (حساب المدير العام أو مالك شبكة):</span>
+                    </label>
+                    <select id="payout-beneficiary-select" required onchange="app.handlePayoutBeneficiaryChange(this.value)" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500">
+                        <option value="">-- اختر المستفيد --</option>
+                    </select>
+                </div>
+
+                <!-- 2. حقل عرض الرصيد المستحق (تلقائي وقراءة فقط - Read-Only) -->
+                <div class="bg-gray-950/90 border border-emerald-500/30 rounded-2xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] font-bold text-gray-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-wallet text-emerald-400"></i>
+                            <span>الرصيد المتاح الحالي والمستحق للصرف (تلقائي - قراءة فقط):</span>
+                        </label>
+                        <span id="payout-beneficiary-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold">اختر المستفيد</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="payout-available-balance-display" readonly value="0 ر.ي" class="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-base font-black text-emerald-400 font-mono text-center cursor-not-allowed select-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-1 text-[10px] text-gray-400 border-t border-gray-800/80">
+                        <div class="flex items-center justify-between bg-gray-900/60 px-2.5 py-1 rounded-lg">
+                            <span>إجمالي المستحقات المتراكمة:</span>
+                            <span class="font-bold text-gray-200 font-mono" id="payout-gross-dues-info">0 ر.ي</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-gray-900/60 px-2.5 py-1 rounded-lg">
+                            <span>المسحوبات المسلمة سابقاً:</span>
+                            <span class="font-bold text-rose-400 font-mono" id="payout-prev-disbursed-info">0 ر.ي</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. حقل إدخال المبلغ المراد صرفه + التحقق التلقائي -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-200">
+                            <i class="fa-solid fa-money-bill-wave text-amber-400 ml-1"></i>
+                            <span>المبلغ المراد صرفه وتسويته (ر.ي):</span>
+                        </label>
+                        <button type="button" onclick="app.fillFullAvailablePayoutAmount()" class="text-[10px] font-bold text-teal-300 hover:text-teal-200 bg-teal-500/10 border border-teal-500/30 px-2 py-0.5 rounded-lg transition">
+                            صرف كامل الرصيد المتاح
+                        </button>
+                    </div>
+                    <input type="number" id="payout-amount-input" step="any" min="1" required placeholder="أدخل المبلغ المراد صرفه..." oninput="app.validatePayoutAmountInput()" class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm font-black text-white font-mono focus:outline-none focus:border-emerald-500">
+                    
+                    <!-- رسالة التحقق الفورية والرصيد المتبقي بعد الصرف -->
+                    <div id="payout-amount-validation-msg" class="hidden text-[11px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>المبلغ المدخل أكبر من الرصيد المتاح للصرف!</span>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] bg-gray-850 px-3 py-1.5 rounded-xl border border-gray-800">
+                        <span class="text-gray-400">الرصيد المتبقي للمستفيد بعد هذا الصرف:</span>
+                        <span class="font-black text-amber-400 font-mono" id="payout-balance-after-display">0 ر.ي</span>
+                    </div>
+                </div>
+
+                <!-- 4. حقل وسيلة التحويل -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-200">
+                        <i class="fa-solid fa-building-columns text-teal-400 ml-1"></i>
+                        <span>وسيلة التحويل / الدفع:</span>
+                    </label>
+                    <select id="payout-transfer-method" required class="w-full px-3.5 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-emerald-500">
+                        <option value="الكريمي">الكريمي</option>
+                        <option value="بنك الشرق">بنك الشرق</option>
+                        <option value="كاش">كاش</option>
+                        <option value="حوالة أخرى">حوالة أخرى</option>
+                    </select>
+                </div>
+
+                <!-- 5. حقل إرفاق صورة السند -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-200">
+                        <i class="fa-solid fa-image text-purple-400 ml-1"></i>
+                        <span>إرفاق صورة سند الصرف / الحوالة:</span>
+                    </label>
+                    <div class="border-2 border-dashed border-gray-700 hover:border-emerald-500/60 rounded-2xl p-3 text-center cursor-pointer transition bg-gray-850/60" onclick="document.getElementById('payout-receipt-file').click()">
+                        <input type="file" id="payout-receipt-file" accept="image/*" class="hidden" onchange="app.handlePayoutReceiptPreview(this)">
+                        <div id="payout-receipt-placeholder" class="space-y-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl text-emerald-400"></i>
+                            <p class="text-xs font-bold text-white">انقر لرفع أو التقاط صورة سند التحويل</p>
+                            <p class="text-[10px] text-gray-400">تُحفظ صورة السند في أرشيف التسويات وكشف الحساب</p>
+                        </div>
+                        <div id="payout-receipt-preview-wrap" class="hidden space-y-1.5">
+                            <img id="payout-receipt-preview-img" src="" alt="معاينة سند الصرف" class="max-h-32 mx-auto rounded-xl border border-gray-700 shadow-md">
+                            <p class="text-[10px] text-emerald-400 font-bold" id="payout-receipt-filename">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. حقل رقم الحوالة / الملاحظات -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-200">رقم الحوالة / رقم السند:</label>
+                        <input type="text" id="payout-reference-number" placeholder="مثال: 44591022 أو تلقائي..." class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-gray-200">الملاحظات / البيان:</label>
+                        <input type="text" id="payout-notes" placeholder="تسوية مستحقات مبيعات الكروت..." class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <!-- 7. زر تأكيد واعتماد الصرف -->
+                <div class="pt-2 flex gap-2">
+                    <button type="submit" id="payout-submit-btn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-gray-950 font-black text-xs shadow-lg transition flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                        <i class="fa-solid fa-circle-check text-sm"></i>
+                        <span>تأكيد واعتماد الصرف</span>
+                    </button>
+                    <button type="button" onclick="app.closeUnifiedPayoutModal()" class="px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold text-xs">
+                        إلغاء
                     </button>
                 </div>
             </form>
@@ -3592,21 +3839,34 @@ const app = {
 
             let html = '';
             data.transactions.forEach(t => {
-                const isPositive = t.amount > 0;
-                const dateStr = new Date(t.created_at).toLocaleDateString('ar-YE', {
+                const isPositive = Number(t.amount) > 0;
+                const dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString('ar-YE', {
                     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                });
+                }) : '-';
 
-                let badge = isPositive ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">+ إيداع وبونص</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">- شراء كرت</span>';
+                let badge = '';
+                if (t.type === 'payout') {
+                    badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">- صرف مستحقات / أرباح</span>';
+                } else if (isPositive) {
+                    badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400">+ إيداع وبونص</span>';
+                } else {
+                    badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400">- شراء كرت</span>';
+                }
+
+                const receiptBtn = t.receipt_img ? `
+                    <button onclick="app.viewReceiptModal('${t.receipt_img}', 'سند صرف ${t.voucher_number || ''}')" class="mr-1.5 px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 text-[9px] font-bold border border-teal-500/30">
+                        <i class="fa-solid fa-image"></i> السند
+                    </button>
+                ` : '';
 
                 html += `
                     <tr class="hover:bg-gray-850">
                         <td class="p-3">${badge}</td>
-                        <td class="p-3 text-gray-200 text-xs">${t.description}</td>
+                        <td class="p-3 text-gray-200 text-xs">${t.description || t.title || '-'} ${receiptBtn}</td>
                         <td class="p-3 font-bold font-mono text-xs ${isPositive ? 'text-emerald-400' : 'text-rose-400'}">
-                            ${isPositive ? '+' : ''}${Number(t.amount).toLocaleString()} ر.ي
+                            ${isPositive ? '+' : ''}${this.fmtNum(t.amount)} ر.ي
                         </td>
-                        <td class="p-3 font-mono text-gray-300 font-bold text-xs">${Number(t.balance_after).toLocaleString()} ر.ي</td>
+                        <td class="p-3 font-mono text-gray-300 font-bold text-xs">${this.fmtNum(t.balance_after)} ر.ي</td>
                         <td class="p-3 text-[10px] text-gray-500">${dateStr}</td>
                     </tr>
                 `;
@@ -3969,13 +4229,13 @@ const app = {
         } catch (e) {}
     },
 
-    // 2. تقرير الأرباح والمبيعات الحصري للمدير العام
+    // 2. تقرير الأرباح والمبيعات والتسويات الحصري للمدير العام
     loadAdminProfitAnalytics: async function () {
         const grid = document.getElementById('profit-summary-grid');
         const tbody = document.getElementById('profit-networks-table-body');
 
         if (grid) grid.innerHTML = '<div class="col-span-full text-center py-6 text-gray-500"><i class="fa-solid fa-spinner fa-spin text-amber-400"></i> جاري احتساب الأرباح...</div>';
-        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>';
 
         const dateFrom = document.getElementById('profit-date-from') ? document.getElementById('profit-date-from').value : '';
         const dateTo = document.getElementById('profit-date-to') ? document.getElementById('profit-date-to').value : '';
@@ -3984,6 +4244,9 @@ const app = {
         if (dateFrom) params.push(`date_from=${dateFrom}`);
         if (dateTo) params.push(`date_to=${dateTo}`);
         if (params.length) url += `?${params.join('&')}`;
+
+        // جلب أرشيف المسحوبات والتسويات بالتوازي
+        this.loadAdminPayoutsArchive();
 
         try {
             const res = await this.apiFetch(url);
@@ -3996,8 +4259,10 @@ const app = {
             }
 
             this.state.profitAnalytics = data;
+            if (Array.isArray(data.beneficiaries)) {
+                this.state.payoutBeneficiaries = data.beneficiaries;
+            }
 
-            // Render summary cards safely (never hangs on loading)
             const s = data.summary || data.totals || {};
             if (grid) {
                 const totalSales = s.total_sales_revenue !== undefined ? s.total_sales_revenue : (s.total_platform_sales || 0);
@@ -4007,6 +4272,12 @@ const app = {
                 const soldCards = s.total_sold_cards !== undefined ? s.total_sold_cards : (s.total_cards_sold || 0);
                 const availCards = s.total_available_cards !== undefined ? s.total_available_cards : (s.total_cards_available || 0);
 
+                const totalDisbursed = s.total_payouts_disbursed !== undefined ? s.total_payouts_disbursed : (s. delivered_settlements_and_withdrawals || 0);
+                const adminDisbursed = s.admin_profit_disbursed !== undefined ? s.admin_profit_disbursed : 0;
+                const ownerDisbursed = s.owner_payouts_disbursed !== undefined ? s.owner_payouts_disbursed : 0;
+                const availAdminProfit = s.available_admin_profit !== undefined ? s.available_admin_profit : Math.max(0, totalProfit - adminDisbursed);
+                const availOwnerDues = s.available_owner_dues !== undefined ? s.available_owner_dues : Math.max(0, totalPayouts - ownerDisbursed);
+
                 grid.innerHTML = `
                     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 space-y-1">
                         <div class="flex items-center justify-between text-gray-400 text-[10px] font-bold">
@@ -4014,34 +4285,60 @@ const app = {
                             <i class="fa-solid fa-cart-shopping text-emerald-400"></i>
                         </div>
                         <div class="text-lg font-black text-emerald-400 font-mono">${this.fmtNum(totalSales)} <span class="text-[10px]">ر.ي</span></div>
-                        <p class="text-[9px] text-gray-500">إجمالي ما دفعه العملاء للكروت</p>
-                    </div>
-
-                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 space-y-1">
-                        <div class="flex items-center justify-between text-gray-400 text-[10px] font-bold">
-                            <span>مستحقات ملاك الشبكات</span>
-                            <i class="fa-solid fa-tower-broadcast text-teal-400"></i>
-                        </div>
-                        <div class="text-lg font-black text-teal-300 font-mono">${this.fmtNum(totalPayouts)} <span class="text-[10px]">ر.ي</span></div>
-                        <p class="text-[9px] text-gray-500">مجموع سعر التكلفة للشبكات</p>
+                        <p class="text-[9px] text-gray-500">الكروت المباعة: ${this.fmtCards(soldCards, '0 كرت')} • المتاح: ${this.fmtCards(availCards, '0 كرت')}</p>
                     </div>
 
                     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 space-y-1 bg-gradient-to-tr from-amber-950/30 to-gray-900 border-amber-500/40">
                         <div class="flex items-center justify-between text-amber-300 text-[10px] font-bold">
-                            <span>صافي ربح المدير العام</span>
+                            <span>صافي ربح المدير العام (الإجمالي)</span>
                             <i class="fa-solid fa-sack-dollar text-amber-400"></i>
                         </div>
                         <div class="text-lg font-black text-amber-400 font-mono">${this.fmtNum(totalProfit)} <span class="text-[10px]">ر.ي</span></div>
-                        <p class="text-[9px] text-amber-400/80 font-bold">هامش الربح: ${this.fmtNum(margin)}%</p>
+                        <p class="text-[9px] text-amber-300/90 font-bold">المتاح للصرف: ${this.fmtNum(availAdminProfit)} ر.ي • الهامش: ${this.fmtNum(margin)}%</p>
                     </div>
 
                     <div class="bg-gray-900 border border-gray-800 rounded-2xl p-3.5 space-y-1">
                         <div class="flex items-center justify-between text-gray-400 text-[10px] font-bold">
-                            <span>الكروت المباعة</span>
-                            <i class="fa-solid fa-ticket text-purple-400"></i>
+                            <span>إجمالي مستحقات ملاك الشبكات</span>
+                            <i class="fa-solid fa-tower-broadcast text-teal-400"></i>
                         </div>
-                        <div class="text-lg font-black text-purple-300 font-mono">${this.fmtCards(soldCards, '0 كرت')}</div>
-                        <p class="text-[9px] text-gray-500">المخزون المتاح: ${this.fmtCards(availCards, '0 كرت')}</p>
+                        <div class="text-lg font-black text-teal-300 font-mono">${this.fmtNum(totalPayouts)} <span class="text-[10px]">ر.ي</span></div>
+                        <p class="text-[9px] text-teal-400/90 font-bold">المتاح للصرف حالياً: ${this.fmtNum(availOwnerDues)} ر.ي</p>
+                    </div>
+
+                    <div class="bg-gray-900 border border-rose-500/40 rounded-2xl p-3.5 space-y-1 bg-gradient-to-tr from-rose-950/30 to-gray-900">
+                        <div class="flex items-center justify-between text-rose-300 text-[10px] font-bold">
+                            <span>إجمالي المسحوبات والتسويات المسلمة</span>
+                            <i class="fa-solid fa-file-invoice-dollar text-rose-400"></i>
+                        </div>
+                        <div class="text-lg font-black text-rose-400 font-mono">${this.fmtNum(totalDisbursed)} <span class="text-[10px]">ر.ي</span></div>
+                        <p class="text-[9px] text-gray-400">مسحوبات المدير: ${this.fmtNum(adminDisbursed)} • تسويات الشبكات: ${this.fmtNum(ownerDisbursed)} ر.ي</p>
+                    </div>
+
+                    <div class="bg-gray-900 border border-emerald-500/30 rounded-2xl p-3.5 space-y-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-emerald-300 text-[10px] font-bold">
+                                <span>رصيد أرباح المنصة المتاح للصرف</span>
+                                <i class="fa-solid fa-crown text-amber-400"></i>
+                            </div>
+                            <div class="text-lg font-black text-emerald-400 font-mono mt-0.5">${this.fmtNum(availAdminProfit)} <span class="text-[10px]">ر.ي</span></div>
+                        </div>
+                        <button onclick="app.openUnifiedPayoutModal('admin_profit')" class="w-full py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold transition">
+                            صرف من أرباح المنصة
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-900 border border-teal-500/30 rounded-2xl p-3.5 space-y-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between text-teal-300 text-[10px] font-bold">
+                                <span>رصيد مستحقات الشبكات المتاح للصرف</span>
+                                <i class="fa-solid fa-hand-holding-dollar text-teal-400"></i>
+                            </div>
+                            <div class="text-lg font-black text-teal-300 font-mono mt-0.5">${this.fmtNum(availOwnerDues)} <span class="text-[10px]">ر.ي</span></div>
+                        </div>
+                        <button onclick="app.openUnifiedPayoutModal()" class="w-full py-1 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 text-[10px] font-bold transition">
+                            تسوية وصرف لمالك شبكة
+                        </button>
                     </div>
                 `;
             }
@@ -4050,32 +4347,39 @@ const app = {
             if (tbody) {
                 const nets = data.networks || [];
                 if (!nets.length) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-gray-500">لا توجد شبكات مضافة حالياً</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" class="p-6 text-center text-gray-500">لا توجد شبكات مضافة حالياً</td></tr>';
                     return;
                 }
 
                 let html = '';
                 nets.forEach(n => {
+                    const disbursed = n.disbursed_amount !== undefined ? n.disbursed_amount : 0;
+                    const availBal = n.available_balance !== undefined ? n.available_balance : Math.max(0, Number(n.owner_payout || 0) - Number(disbursed));
                     html += `
                         <tr class="hover:bg-gray-850">
                             <td class="p-3">
                                 <div class="font-bold text-white text-xs">${n.name}</div>
-                                <span class="text-[9px] text-gray-500">${this.fmtNum(n.total_packages)} باقات</span>
+                                <span class="text-[9px] text-gray-500">${n.owner_name || ''} • ${this.fmtNum(n.total_packages)} باقات</span>
                             </td>
                             <td class="p-3 font-bold text-teal-300 text-xs">${this.fmtCards(n.sold_cards, '0 كرت')}</td>
                             <td class="p-3 text-purple-300 text-xs">${this.fmtCards(n.available_cards, '0 كرت')}</td>
                             <td class="p-3 font-mono font-bold text-emerald-400 text-xs">${this.fmtNum(n.total_sales)} ر.ي</td>
-                            <td class="p-3 font-mono font-bold text-teal-400 text-xs">${this.fmtNum(n.owner_payout)} ر.ي</td>
-                            <td class="p-3 font-mono font-bold text-amber-400 text-xs">${this.fmtNum(n.net_profit)} ر.ي</td>
-                            <td class="p-3">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
-                                    ${this.fmtNum(n.profit_margin_percent)}%
-                                </span>
+                            <td class="p-3 font-mono font-bold text-teal-300 text-xs">${this.fmtNum(n.owner_payout)} ر.ي</td>
+                            <td class="p-3 font-mono font-bold text-rose-400 text-xs">${this.fmtNum(disbursed)} ر.ي</td>
+                            <td class="p-3 font-mono font-black text-emerald-400 text-xs">${this.fmtNum(availBal)} ر.ي</td>
+                            <td class="p-3 font-mono font-bold text-amber-400 text-xs">
+                                ${this.fmtNum(n.net_profit)} ر.ي
+                                <span class="block text-[9px] text-amber-300/80">(${this.fmtNum(n.profit_margin_percent)}%)</span>
                             </td>
                             <td class="p-3 text-center">
-                                <button onclick="app.openNetworkStatementModal(${n.id})" class="px-2.5 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-[10px] font-bold transition">
-                                    كشف الحساب
-                                </button>
+                                <div class="flex items-center justify-center gap-1">
+                                    <button onclick="app.openUnifiedPayoutModal('network:${n.id}')" class="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-[10px] transition shadow-sm">
+                                        صرف مستحقات
+                                    </button>
+                                    <button onclick="app.openNetworkStatementModal(${n.id})" class="px-2.5 py-1 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-[10px] font-bold transition">
+                                        كشف الحساب
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -4085,7 +4389,7 @@ const app = {
 
         } catch (e) {
             if (grid) grid.innerHTML = '<div class="col-span-full text-center py-4 text-rose-400 text-xs">تعذر احتساب الأرباح</div>';
-            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-rose-400">خطأ في احتساب الأرباح</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-rose-400">خطأ في احتساب الأرباح</td></tr>';
         }
     },
 
@@ -4392,15 +4696,20 @@ const app = {
                 if (!data.transactions || !data.transactions.length) {
                     txBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500">لا توجد حركات رصيد مسجلة</td></tr>';
                 } else {
-                    txBody.innerHTML = data.transactions.map((t, idx) => `
-                        <tr class="hover:bg-gray-850">
+                    txBody.innerHTML = data.transactions.map((t, idx) => {
+                        const isPayout = t.transaction_type === 'payout_settlement';
+                        const typeBadge = isPayout
+                            ? `<span class="inline-block ml-1.5 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[9px] font-black">${t.category_label || 'صرف مستحقات / أرباح'}${t.voucher_number ? ' • ' + t.voucher_number : ''}</span>`
+                            : '';
+                        return `
+                        <tr class="hover:bg-gray-850 ${isPayout ? 'bg-rose-950/15' : ''}">
                             <td class="p-2 font-mono text-gray-400">#${idx + 1}</td>
-                            <td class="p-2 text-gray-200">${t.description || '-'}</td>
+                            <td class="p-2 text-gray-200">${typeBadge}${t.description || '-'}</td>
                             <td class="p-2 font-mono font-bold ${t.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}">${t.amount > 0 ? '+' : ''}${this.fmtNum(t.amount)} ر.ي</td>
                             <td class="p-2 font-mono text-gray-300">${this.fmtNum(t.balance_after)} ر.ي</td>
                             <td class="p-2 text-gray-500 text-[10px]">${t.created_at ? new Date(t.created_at).toLocaleDateString('ar-YE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 }
             }
 
@@ -4520,10 +4829,10 @@ const app = {
             this.state.currentMasterReport = { type: 'networks', data };
             const now = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            document.getElementById('master-report-header-title').textContent = 'التقرير المالي الموحد للأرباح ومبيعات الشبكات';
-            document.getElementById('master-report-header-sub').textContent = 'تقرير شامل لصافي الأرباح، مستحقات ملاك الشبكات، والمبيعات الإجمالية';
+            document.getElementById('master-report-header-title').textContent = 'التقرير المالي الموحد للأرباح ومبيعات وتسويات الشبكات';
+            document.getElementById('master-report-header-sub').textContent = 'تقرير شامل لصافي الأرباح، مستحقات ملاك الشبكات، وإجمالي المسحوبات والتسويات المسلمة';
 
-            document.getElementById('master-rep-doc-title').textContent = 'تقرير الأرباح ومستحقات الشبكات - واي فاي اليمن';
+            document.getElementById('master-rep-doc-title').textContent = 'تقرير الأرباح والتسويات ومستحقات الشبكات - واي فاي اليمن';
             document.getElementById('master-rep-doc-sub').textContent = 'سجل مالي مفصل خاص بالمدير العام: مشعل المريسي';
             document.getElementById('master-rep-date').textContent = `تاريخ التصدير: ${now}`;
 
@@ -4531,7 +4840,7 @@ const app = {
             const totalSales = s.total_sales_revenue !== undefined ? s.total_sales_revenue : (s.total_platform_sales || 0);
             const totalPayouts = s.total_owner_payouts !== undefined ? s.total_owner_payouts : (s.total_network_payouts || 0);
             const totalProfit = s.total_net_profit !== undefined ? s.total_net_profit : (s.total_admin_profit || 0);
-            const soldCards = s.total_sold_cards !== undefined ? s.total_sold_cards : (s.total_cards_sold || 0);
+            const totalDisbursed = s.total_payouts_disbursed !== undefined ? s.total_payouts_disbursed : (s.delivered_settlements_and_withdrawals || 0);
 
             document.getElementById('master-rep-stats-grid').innerHTML = `
                 <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
@@ -4539,16 +4848,16 @@ const app = {
                     <span class="font-black text-emerald-400 font-mono">${this.fmtNum(totalSales)} ر.ي</span>
                 </div>
                 <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
-                    <span class="text-gray-400 block text-[10px]">مستحقات الشبكات</span>
+                    <span class="text-gray-400 block text-[10px]">إجمالي مستحقات الشبكات</span>
                     <span class="font-black text-teal-300 font-mono">${this.fmtNum(totalPayouts)} ر.ي</span>
                 </div>
                 <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
-                    <span class="text-gray-400 block text-[10px]">صافي ربح المدير</span>
+                    <span class="text-gray-400 block text-[10px]">صافي ربح المدير العام</span>
                     <span class="font-black text-amber-400 font-mono">${this.fmtNum(totalProfit)} ر.ي</span>
                 </div>
-                <div class="bg-gray-850 p-2.5 rounded-xl border border-gray-800">
-                    <span class="text-gray-400 block text-[10px]">إجمالي الكروت المباعة</span>
-                    <span class="font-black text-purple-300 font-mono">${this.fmtCards(soldCards, '0 كرت')}</span>
+                <div class="bg-gray-850 p-2.5 rounded-xl border border-rose-500/30">
+                    <span class="text-rose-300 block text-[10px] font-bold">إجمالي المسحوبات والتسويات المسلمة</span>
+                    <span class="font-black text-rose-400 font-mono">${this.fmtNum(totalDisbursed)} ر.ي</span>
                 </div>
             `;
 
@@ -4556,29 +4865,32 @@ const app = {
                 <tr>
                     <th class="p-2.5">#</th>
                     <th class="p-2.5">الشبكة</th>
-                    <th class="p-2.5">عدد الباقات</th>
                     <th class="p-2.5">الكروت المباعة</th>
                     <th class="p-2.5">المخزون المتبقي</th>
                     <th class="p-2.5">إجمالي المبيعات</th>
                     <th class="p-2.5">مستحقات الشبكة</th>
+                    <th class="p-2.5">المسلم فعلياً</th>
+                    <th class="p-2.5">الرصيد المتاح للصرف</th>
                     <th class="p-2.5">صافي ربح المدير</th>
-                    <th class="p-2.5">هامش الربح</th>
                 </tr>
             `;
 
-            document.getElementById('master-rep-table-body').innerHTML = (data.networks || []).map((n, idx) => `
+            document.getElementById('master-rep-table-body').innerHTML = (data.networks || []).map((n, idx) => {
+                const disbursed = n.disbursed_amount !== undefined ? n.disbursed_amount : 0;
+                const availBal = n.available_balance !== undefined ? n.available_balance : Math.max(0, Number(n.owner_payout || 0) - Number(disbursed));
+                return `
                 <tr class="hover:bg-gray-850">
                     <td class="p-2.5 font-mono text-gray-400">${idx + 1}</td>
                     <td class="p-2.5 font-bold text-white">${n.name}</td>
-                    <td class="p-2.5 font-mono text-gray-300">${this.fmtNum(n.total_packages)}</td>
                     <td class="p-2.5 font-mono font-bold text-teal-300">${this.fmtCards(n.sold_cards, '0 كرت')}</td>
                     <td class="p-2.5 font-mono text-purple-300">${this.fmtCards(n.available_cards, '0 كرت')}</td>
                     <td class="p-2.5 font-mono font-bold text-emerald-400">${this.fmtNum(n.total_sales)} ر.ي</td>
                     <td class="p-2.5 font-mono font-bold text-teal-400">${this.fmtNum(n.owner_payout)} ر.ي</td>
+                    <td class="p-2.5 font-mono font-bold text-rose-400">${this.fmtNum(disbursed)} ر.ي</td>
+                    <td class="p-2.5 font-mono font-black text-emerald-300">${this.fmtNum(availBal)} ر.ي</td>
                     <td class="p-2.5 font-mono font-bold text-amber-400">${this.fmtNum(n.net_profit)} ر.ي</td>
-                    <td class="p-2.5 font-mono font-bold text-amber-300">${this.fmtNum(n.profit_margin_percent)}%</td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             this.openModal('master-report-modal');
 
@@ -4622,6 +4934,8 @@ const app = {
                 }
                 let html = '';
                 data.analytics.forEach(net => {
+                    const availBal = net.available_balance !== undefined ? net.available_balance : (net.owner_payout || 0);
+                    const disbursed = net.disbursed_amount !== undefined ? net.disbursed_amount : 0;
                     html += `
                         <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 space-y-3 shadow-md">
                             <div class="flex items-center justify-between border-b border-gray-800 pb-2.5">
@@ -4629,7 +4943,10 @@ const app = {
                                     <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm font-bold">
                                         <i class="fa-solid ${net.logo_icon || 'fa-wifi'}"></i>
                                     </div>
-                                    <h4 class="font-extrabold text-white text-xs sm:text-sm">${net.name}</h4>
+                                    <div>
+                                        <h4 class="font-extrabold text-white text-xs sm:text-sm">${net.name}</h4>
+                                        <span class="text-[9px] text-gray-400">${net.owner_name || 'مالك شبكة'}</span>
+                                    </div>
                                 </div>
                                 <span class="text-[9px] px-2 py-0.5 rounded-full font-bold bg-gray-800 text-gray-300">${this.fmtNum(net.total_packages)} باقات</span>
                             </div>
@@ -4649,10 +4966,27 @@ const app = {
                                 </div>
                             </div>
 
-                            <button onclick="app.openNetworkStatementModal(${net.id})" class="w-full py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold text-xs border border-purple-500/40 flex items-center justify-center gap-1.5 transition">
-                                <i class="fa-solid fa-file-invoice text-xs"></i>
-                                <span>استخراج كشف حساب الشبكة</span>
-                            </button>
+                            <div class="grid grid-cols-2 gap-1.5 text-[10px] bg-gray-950/80 p-2 rounded-xl border border-gray-800">
+                                <div>
+                                    <span class="text-gray-400 block">المسحوبات المسلمة:</span>
+                                    <span class="font-bold text-rose-400 font-mono">${this.fmtNum(disbursed)} ر.ي</span>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-gray-400 block">الرصيد المتاح للصرف:</span>
+                                    <span class="font-black text-emerald-400 font-mono">${this.fmtNum(availBal)} ر.ي</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-1.5">
+                                <button onclick="app.openUnifiedPayoutModal('network:${net.id}')" class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs flex items-center justify-center gap-1 transition shadow-sm">
+                                    <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
+                                    <span>صرف مستحقات</span>
+                                </button>
+                                <button onclick="app.openNetworkStatementModal(${net.id})" class="flex-1 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-bold text-xs border border-purple-500/40 flex items-center justify-center gap-1 transition">
+                                    <i class="fa-solid fa-file-invoice text-xs"></i>
+                                    <span>كشف الحساب</span>
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
@@ -4663,6 +4997,98 @@ const app = {
         } catch (e) {
             grid.innerHTML = '<div class="col-span-full text-center py-6 text-rose-400 text-xs">تعذر جلب تقارير الشبكات</div>';
         }
+    },
+
+    renderNetworkStatementContent: function (data, titlePrefix = 'كشف حساب شبكة') {
+        this.state.currentNetworkStatement = data;
+        const now = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        document.getElementById('net-stmt-title').textContent = `${titlePrefix}: ${data.network.name}`;
+        const dateEl = document.getElementById('net-stmt-date');
+        if (dateEl) dateEl.textContent = `تاريخ الكشف: ${now}`;
+        
+        const totals = data.totals || {};
+        const totalSales = totals.total_revenue !== undefined ? totals.total_revenue : (totals.total_sales !== undefined ? totals.total_sales : (data.total_sales || 0));
+        const soldCount = totals.total_cards_sold !== undefined ? totals.total_cards_sold : (totals.sold_cards !== undefined ? totals.sold_cards : (data.sold_count || 0));
+        const ownerDues = totals.owner_dues !== undefined ? totals.owner_dues : (data.owner_dues || 0);
+        const disbursed = totals.disbursed_amount !== undefined ? totals.disbursed_amount : (data.disbursed_amount || 0);
+        const availBal = totals.available_balance !== undefined ? totals.available_balance : (data.available_balance !== undefined ? data.available_balance : Math.max(0, ownerDues - disbursed));
+
+        const salesEl = document.getElementById('net-stmt-total-sales');
+        if (salesEl) salesEl.textContent = `${this.fmtNum(totalSales)} ر.ي`;
+        const soldEl = document.getElementById('net-stmt-sold-count');
+        if (soldEl) soldEl.textContent = this.fmtCards(soldCount, '0 كرت');
+        const duesEl = document.getElementById('net-stmt-owner-dues');
+        if (duesEl) duesEl.textContent = `${this.fmtNum(ownerDues)} ر.ي`;
+        const disbEl = document.getElementById('net-stmt-disbursed');
+        if (disbEl) disbEl.textContent = `${this.fmtNum(disbursed)} ر.ي`;
+        const availEl = document.getElementById('net-stmt-available-balance');
+        if (availEl) availEl.textContent = `${this.fmtNum(availBal)} ر.ي`;
+
+        // 1. Render Transactions Ledger (#net-stmt-ledger-tbody)
+        const ledgerBody = document.getElementById('net-stmt-ledger-tbody');
+        if (ledgerBody) {
+            const ledger = data.ledger || [];
+            if (!ledger.length) {
+                ledgerBody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500">لا توجد حركات محاسبية مسجلة في دفتر الأستاذ بعد</td></tr>';
+            } else {
+                ledgerBody.innerHTML = ledger.map(entry => {
+                    const isPayout = entry.type === 'payout' || Number(entry.amount) < 0;
+                    const dStr = entry.created_at ? new Date(entry.created_at).toLocaleDateString('ar-YE', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    const catBadge = isPayout
+                        ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">صرف مستحقات / أرباح</span>'
+                        : '<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">+ مستحقات مبيعات</span>';
+                    const receiptBtn = entry.receipt_img ? `
+                        <button onclick="app.viewReceiptModal('${entry.receipt_img}', 'سند صرف ${entry.voucher_number || ''}')" class="mr-1 px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 text-[9px] font-bold border border-teal-500/30 no-print">
+                            <i class="fa-solid fa-image"></i> السند
+                        </button>
+                    ` : '';
+                    return `
+                        <tr class="hover:bg-gray-850">
+                            <td class="p-2.5">${catBadge}</td>
+                            <td class="p-2.5 font-mono text-gray-300 text-[10px]">${entry.voucher_number || entry.reference_number || '-'}</td>
+                            <td class="p-2.5 text-gray-200">${entry.description || entry.category || '-'} ${receiptBtn}</td>
+                            <td class="p-2.5 font-mono font-black ${isPayout ? 'text-rose-400' : 'text-emerald-400'}">
+                                ${Number(entry.amount) > 0 ? '+' : ''}${this.fmtNum(entry.amount)} ر.ي
+                            </td>
+                            <td class="p-2.5 text-gray-400 text-[10px]">${dStr}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 2. Render Sold Cards Table (#net-stmt-table-body)
+        const tbody = document.getElementById('net-stmt-table-body');
+        const items = data.items || data.cards || [];
+        if (tbody) {
+            if (!items.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">لا توجد مبيعات مسجلة لهذه الشبكة بعد</td></tr>';
+            } else {
+                tbody.innerHTML = items.map(item => {
+                    const dateStr = item.purchased_at ? new Date(item.purchased_at).toLocaleDateString('ar-YE', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : '-';
+                    const ownerShare = item.owner_share !== undefined ? item.owner_share : (item.cost_price !== undefined ? item.cost_price : item.price);
+                    return `
+                        <tr class="hover:bg-gray-850">
+                            <td class="p-2.5 font-mono text-gray-400">#${item.card_id || item.id}</td>
+                            <td class="p-2.5 font-bold text-white">${item.package_name || '-'}</td>
+                            <td class="p-2.5 font-mono font-bold text-emerald-400">${this.fmtNum(item.price)} ر.ي</td>
+                            <td class="p-2.5 font-mono font-bold text-teal-300">${this.fmtNum(ownerShare)} ر.ي</td>
+                            <td class="p-2.5 font-mono text-emerald-300 font-bold select-all">${item.pin_code || '-'}</td>
+                            <td class="p-2.5 font-mono text-gray-400 text-[10px]">${item.serial_number || '-'}</td>
+                            <td class="p-2.5 text-gray-300">${item.buyer_name || '-'}</td>
+                            <td class="p-2.5 text-gray-500 text-[10px]">${dateStr}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        this.openModal('network-statement-modal');
     },
 
     openNetworkStatementModal: async function (networkId, dateFrom, dateTo) {
@@ -4682,46 +5108,7 @@ const app = {
                 return;
             }
 
-            this.state.currentNetworkStatement = data;
-            const now = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' });
-            
-            document.getElementById('net-stmt-title').textContent = `كشف حساب شبكة: ${data.network.name}`;
-            const dateEl = document.getElementById('net-stmt-date');
-            if (dateEl) dateEl.textContent = `تاريخ الكشف: ${now}`;
-            
-            const totalSales = (data.totals && (data.totals.total_revenue || data.totals.total_sales)) || data.total_sales || 0;
-            const soldCount = (data.totals && (data.totals.total_cards_sold || data.totals.sold_cards)) || data.sold_count || (data.items ? data.items.length : 0);
-
-            document.getElementById('net-stmt-total-sales').textContent = `${this.fmtNum(totalSales)} ر.ي`;
-            document.getElementById('net-stmt-sold-count').textContent = this.fmtCards(soldCount, '0 كرت');
-
-            const tbody = document.getElementById('net-stmt-table-body');
-            const items = data.items || data.cards || [];
-            if (!items.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">لا توجد مبيعات مسجلة لهذه الشبكة بعد</td></tr>';
-            } else {
-                let html = '';
-                items.forEach((item, idx) => {
-                    const dateStr = item.purchased_at ? new Date(item.purchased_at).toLocaleDateString('ar-YE', {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    }) : '-';
-                    html += `
-                        <tr class="hover:bg-gray-850">
-                            <td class="p-2.5 font-mono text-gray-400">#${item.card_id || item.id}</td>
-                            <td class="p-2.5 font-bold text-white">${item.package_name || '-'}</td>
-                            <td class="p-2.5 font-mono font-bold text-emerald-400">${this.fmtNum(item.price)} ر.ي</td>
-                            <td class="p-2.5 font-mono text-emerald-300 font-bold select-all">${item.pin_code || '-'}</td>
-                            <td class="p-2.5 font-mono text-gray-400 text-[10px]">${item.serial_number || '-'}</td>
-                            <td class="p-2.5 text-gray-300">${item.buyer_name || '-'}</td>
-                            <td class="p-2.5 text-gray-500 text-[10px]">${dateStr}</td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = html;
-            }
-
-            this.openModal('network-statement-modal');
-
+            this.renderNetworkStatementContent(data, 'كشف حساب شبكة');
         } catch (e) {
             this.toast('error', 'خطأ في جلب كشف الحساب');
         }
@@ -4743,46 +5130,7 @@ const app = {
                 return;
             }
 
-            this.state.currentNetworkStatement = data;
-            const now = new Date().toLocaleDateString('ar-YE', { year: 'numeric', month: 'long', day: 'numeric' });
-            
-            document.getElementById('net-stmt-title').textContent = `كشف حساب مبيعات: ${data.network.name}`;
-            const dateEl = document.getElementById('net-stmt-date');
-            if (dateEl) dateEl.textContent = `تاريخ الكشف: ${now}`;
-            
-            const totalSales = (data.totals && (data.totals.total_revenue || data.totals.total_sales)) || data.total_sales || 0;
-            const soldCount = (data.totals && (data.totals.total_cards_sold || data.totals.sold_cards)) || data.sold_count || (data.items ? data.items.length : 0);
-
-            document.getElementById('net-stmt-total-sales').textContent = `${this.fmtNum(totalSales)} ر.ي`;
-            document.getElementById('net-stmt-sold-count').textContent = this.fmtCards(soldCount, '0 كرت');
-
-            const tbody = document.getElementById('net-stmt-table-body');
-            const items = data.items || data.cards || [];
-            if (!items.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">لا توجد مبيعات مسجلة لهذه الشبكة بعد</td></tr>';
-            } else {
-                let html = '';
-                items.forEach((item, idx) => {
-                    const dateStr = item.purchased_at ? new Date(item.purchased_at).toLocaleDateString('ar-YE', {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    }) : '-';
-                    html += `
-                        <tr class="hover:bg-gray-850">
-                            <td class="p-2.5 font-mono text-gray-400">#${item.card_id || item.id}</td>
-                            <td class="p-2.5 font-bold text-white">${item.package_name || '-'}</td>
-                            <td class="p-2.5 font-mono font-bold text-emerald-400">${this.fmtNum(item.price)} ر.ي</td>
-                            <td class="p-2.5 font-mono text-emerald-300 font-bold select-all">${item.pin_code || '-'}</td>
-                            <td class="p-2.5 font-mono text-gray-400 text-[10px]">${item.serial_number || '-'}</td>
-                            <td class="p-2.5 text-gray-300">${item.buyer_name || '-'}</td>
-                            <td class="p-2.5 text-gray-500 text-[10px]">${dateStr}</td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = html;
-            }
-
-            this.openModal('network-statement-modal');
-
+            this.renderNetworkStatementContent(data, 'كشف حساب مبيعات وتسويات');
         } catch (e) {
             this.toast('error', 'خطأ في جلب كشف حساب الشبكة');
         }
@@ -5213,22 +5561,30 @@ const app = {
             document.getElementById('owner-network-title').textContent = data.network.name;
 
             const stats = data.stats || {};
+            const ownerDues = stats.owner_dues !== undefined ? stats.owner_dues : (stats.total_revenue || 0);
+            const disbursed = stats.disbursed_amount !== undefined ? stats.disbursed_amount : 0;
+            const availBal = stats.available_balance !== undefined ? stats.available_balance : Math.max(0, ownerDues - disbursed);
+
             document.getElementById('owner-stats-grid').innerHTML = `
                 <div class="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <span class="text-[10px] text-gray-400 font-bold block">إجمالي المبيعات</span>
-                    <div class="text-base font-black text-emerald-400 font-mono">${this.fmtNum(stats.total_revenue)} ر.ي</div>
+                    <span class="text-[10px] text-gray-400 font-bold block">إجمالي مستحقات المبيعات</span>
+                    <div class="text-base font-black text-teal-300 font-mono">${this.fmtNum(ownerDues)} ر.ي</div>
+                    <span class="text-[9px] text-gray-500">إجمالي المبيعات: ${this.fmtNum(stats.total_revenue)} ر.ي</span>
                 </div>
-                <div class="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <span class="text-[10px] text-gray-400 font-bold block">الكروت المباعة</span>
-                    <div class="text-base font-black text-teal-400">${this.fmtCards(stats.sold_cards_count, '0 كرت')}</div>
+                <div class="bg-gray-900 border border-rose-500/30 rounded-xl p-3">
+                    <span class="text-[10px] text-rose-300 font-bold block">إجمالي المسحوبات المستلمة</span>
+                    <div class="text-base font-black text-rose-400 font-mono">${this.fmtNum(disbursed)} ر.ي</div>
+                    <span class="text-[9px] text-gray-500">سندات الصرف والتسوية</span>
+                </div>
+                <div class="bg-gray-900 border border-emerald-500/40 rounded-xl p-3">
+                    <span class="text-[10px] text-emerald-300 font-bold block">الرصيد المتاح للصرف حالياً</span>
+                    <div class="text-base font-black text-emerald-400 font-mono">${this.fmtNum(availBal)} ر.ي</div>
+                    <span class="text-[9px] text-gray-500">الكروت المباعة: ${this.fmtCards(stats.sold_cards_count, '0 كرت')}</span>
                 </div>
                 <div class="bg-gray-900 border border-gray-800 rounded-xl p-3">
                     <span class="text-[10px] text-gray-400 font-bold block">المخزون المتوفر</span>
                     <div class="text-base font-black text-amber-400">${this.fmtCards(stats.available_cards_count, '0 كرت')}</div>
-                </div>
-                <div class="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <span class="text-[10px] text-gray-400 font-bold block">الباقات</span>
-                    <div class="text-base font-black text-purple-400">${this.fmtNum(stats.total_packages)} باقة</div>
+                    <span class="text-[9px] text-gray-500">الباقات: ${this.fmtNum(stats.total_packages)} باقة</span>
                 </div>
             `;
 
@@ -5792,6 +6148,420 @@ const app = {
         const pkgId = document.getElementById('edit-pkg-id').value;
         const pkgName = document.getElementById('edit-pkg-name').value;
         if (pkgId) this.deletePackage(pkgId, pkgName);
+    },
+
+    // ==================== 8.5 نظام صرف وتسوية المستحقات والأرباح الموحد (Unified Payout & Settlement System) ====================
+
+    openUnifiedPayoutModal: async function (preselectBeneficiaryKey = null) {
+        if (!this.state.user || this.state.user.role !== 'admin') {
+            this.toast('error', 'هذه الصلاحية للمدير العام فقط');
+            return;
+        }
+
+        const form = document.getElementById('unified-payout-form');
+        if (form) form.reset();
+
+        this.state.selectedPayoutBeneficiary = null;
+
+        const availInput = document.getElementById('payout-available-balance-display');
+        if (availInput) availInput.value = 'جاري الجلب...';
+        const grossEl = document.getElementById('payout-gross-dues-info');
+        if (grossEl) grossEl.textContent = '0 ر.ي';
+        const prevEl = document.getElementById('payout-prev-disbursed-info');
+        if (prevEl) prevEl.textContent = '0 ر.ي';
+        const afterEl = document.getElementById('payout-balance-after-display');
+        if (afterEl) afterEl.textContent = '0 ر.ي';
+        const badgeEl = document.getElementById('payout-beneficiary-badge');
+        if (badgeEl) {
+            badgeEl.textContent = 'اختر المستفيد';
+            badgeEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold';
+        }
+
+        const valMsg = document.getElementById('payout-amount-validation-msg');
+        if (valMsg) valMsg.classList.add('hidden');
+
+        const placeholder = document.getElementById('payout-receipt-placeholder');
+        const previewWrap = document.getElementById('payout-receipt-preview-wrap');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (previewWrap) previewWrap.classList.add('hidden');
+
+        this.openModal('unified-payout-modal');
+
+        try {
+            const res = await this.apiFetch('/api/admin/payouts/beneficiaries');
+            const data = await res.json();
+            if (!data.success) {
+                this.toast('error', data.message || 'تعذر جلب قائمة المستفيدين والأرصدة');
+                return;
+            }
+
+            const beneficiaries = data.beneficiaries || [];
+            this.state.payoutBeneficiaries = beneficiaries;
+
+            const selectEl = document.getElementById('payout-beneficiary-select');
+            if (selectEl) {
+                selectEl.innerHTML = `<option value="">-- اختر المستفيد (المدير العام أو مالك شبكة) --</option>` +
+                    beneficiaries.map(b => {
+                        const availTxt = `${this.fmtNum(b.available_balance)} ر.ي`;
+                        return `<option value="${b.key}">${b.label} — (المتاح: ${availTxt})</option>`;
+                    }).join('');
+
+                const targetKey = preselectBeneficiaryKey || (beneficiaries.length > 0 ? beneficiaries[0].key : '');
+                if (targetKey) {
+                    selectEl.value = targetKey;
+                    this.handlePayoutBeneficiaryChange(targetKey);
+                } else if (availInput) {
+                    availInput.value = '0 ر.ي';
+                }
+            }
+        } catch (err) {
+            console.error('openUnifiedPayoutModal error:', err);
+            this.toast('error', 'خطأ في الاتصال لجلب أرصدة المستفيدين');
+        }
+    },
+
+    closeUnifiedPayoutModal: function () {
+        this.closeModal('unified-payout-modal');
+    },
+
+    handlePayoutBeneficiaryChange: function (beneficiaryKey) {
+        const beneficiaries = this.state.payoutBeneficiaries || [];
+        const ben = beneficiaries.find(b => b.key === beneficiaryKey) || null;
+        this.state.selectedPayoutBeneficiary = ben;
+
+        const availInput = document.getElementById('payout-available-balance-display');
+        const grossEl = document.getElementById('payout-gross-dues-info');
+        const prevEl = document.getElementById('payout-prev-disbursed-info');
+        const afterEl = document.getElementById('payout-balance-after-display');
+        const badgeEl = document.getElementById('payout-beneficiary-badge');
+        const amountInput = document.getElementById('payout-amount-input');
+
+        if (!ben) {
+            if (availInput) availInput.value = '0 ر.ي';
+            if (grossEl) grossEl.textContent = '0 ر.ي';
+            if (prevEl) prevEl.textContent = '0 ر.ي';
+            if (afterEl) afterEl.textContent = '0 ر.ي';
+            if (badgeEl) {
+                badgeEl.textContent = 'اختر المستفيد';
+                badgeEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 border border-gray-700 font-bold';
+            }
+            if (amountInput) {
+                amountInput.value = '';
+                amountInput.removeAttribute('max');
+            }
+            this.validatePayoutAmountInput();
+            return;
+        }
+
+        const avail = Number(ben.available_balance || 0);
+        const gross = Number(ben.gross_dues || 0);
+        const prev = Number(ben.total_disbursed || 0);
+
+        if (availInput) availInput.value = `${this.fmtNum(avail)} ر.ي`;
+        if (grossEl) grossEl.textContent = `${this.fmtNum(gross)} ر.ي`;
+        if (prevEl) prevEl.textContent = `${this.fmtNum(prev)} ر.ي`;
+        if (afterEl) afterEl.textContent = `${this.fmtNum(avail)} ر.ي`;
+
+        if (badgeEl) {
+            if (ben.beneficiary_type === 'admin_profit') {
+                badgeEl.textContent = 'أرباح المنصة (المدير العام)';
+                badgeEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold';
+            } else {
+                badgeEl.textContent = `مالك شبكة: ${ben.owner_name || ben.network_name}`;
+                badgeEl.className = 'text-[10px] px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30 font-bold';
+            }
+        }
+
+        if (amountInput) {
+            amountInput.max = avail > 0 ? avail : 0;
+        }
+        this.validatePayoutAmountInput();
+    },
+
+    fillFullAvailablePayoutAmount: function () {
+        const ben = this.state.selectedPayoutBeneficiary;
+        if (!ben) {
+            this.toast('info', 'يرجى اختيار المستفيد أولاً');
+            return;
+        }
+        const avail = Number(ben.available_balance || 0);
+        if (avail <= 0) {
+            this.toast('error', 'لا يوجد رصيد متاح للصرف لهذا المستفيد حالياً');
+            return;
+        }
+        const amountInput = document.getElementById('payout-amount-input');
+        if (amountInput) {
+            amountInput.value = avail;
+            this.validatePayoutAmountInput();
+        }
+    },
+
+    validatePayoutAmountInput: function () {
+        const ben = this.state.selectedPayoutBeneficiary;
+        const amountInput = document.getElementById('payout-amount-input');
+        const valMsg = document.getElementById('payout-amount-validation-msg');
+        const afterEl = document.getElementById('payout-balance-after-display');
+        const submitBtn = document.getElementById('payout-submit-btn');
+
+        if (!amountInput) return true;
+        const rawVal = amountInput.value;
+        const amount = parseFloat(rawVal);
+        const avail = ben ? Number(ben.available_balance || 0) : 0;
+
+        if (!ben) {
+            if (valMsg) valMsg.classList.add('hidden');
+            if (afterEl) afterEl.textContent = '0 ر.ي';
+            if (submitBtn) submitBtn.disabled = false;
+            return false;
+        }
+
+        if (rawVal === '' || isNaN(amount)) {
+            if (valMsg) valMsg.classList.add('hidden');
+            if (afterEl) afterEl.textContent = `${this.fmtNum(avail)} ر.ي`;
+            amountInput.classList.remove('border-rose-500');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            return false;
+        }
+
+        if (amount <= 0) {
+            if (valMsg) {
+                valMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>يجب أن يكون المبلغ المراد صرفه أكبر من الصفر!</span>`;
+                valMsg.classList.remove('hidden');
+            }
+            amountInput.classList.add('border-rose-500');
+            if (afterEl) afterEl.textContent = `${this.fmtNum(avail)} ر.ي`;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            return false;
+        }
+
+        if (amount > avail + 0.0001) {
+            if (valMsg) {
+                valMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>مرفوض: المبلغ المدخل (${this.fmtNum(amount)} ر.ي) أكبر من الرصيد المتاح للصرف (${this.fmtNum(avail)} ر.ي)!</span>`;
+                valMsg.classList.remove('hidden');
+            }
+            amountInput.classList.add('border-rose-500');
+            if (afterEl) afterEl.textContent = `0 ر.ي (تجاوز الرصيد المتاح!)`;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            return false;
+        }
+
+        if (valMsg) valMsg.classList.add('hidden');
+        amountInput.classList.remove('border-rose-500');
+        const remaining = Math.max(0, Math.round((avail - amount) * 100) / 100);
+        if (afterEl) afterEl.textContent = `${this.fmtNum(remaining)} ر.ي`;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        return true;
+    },
+
+    handlePayoutReceiptPreview: function (input) {
+        const placeholder = document.getElementById('payout-receipt-placeholder');
+        const previewWrap = document.getElementById('payout-receipt-preview-wrap');
+        const previewImg = document.getElementById('payout-receipt-preview-img');
+        const fileNameEl = document.getElementById('payout-receipt-filename');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            if (fileNameEl) fileNameEl.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                if (previewImg) previewImg.src = e.target.result;
+                if (placeholder) placeholder.classList.add('hidden');
+                if (previewWrap) previewWrap.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            if (placeholder) placeholder.classList.remove('hidden');
+            if (previewWrap) previewWrap.classList.add('hidden');
+        }
+    },
+
+    handleUnifiedPayoutSubmit: async function (e) {
+        e.preventDefault();
+        if (!this.state.user || this.state.user.role !== 'admin') {
+            this.toast('error', 'صلاحية هذه العملية للمدير العام فقط');
+            return;
+        }
+
+        const selectEl = document.getElementById('payout-beneficiary-select');
+        const beneficiaryKey = selectEl ? selectEl.value : '';
+        if (!beneficiaryKey || !this.state.selectedPayoutBeneficiary) {
+            this.toast('error', 'يرجى اختيار المستفيد من القائمة أولاً');
+            return;
+        }
+
+        if (!this.validatePayoutAmountInput()) {
+            this.toast('error', 'يرجى التحقق من المبلغ المدخل بحيث لا يتجاوز الرصيد المتاح');
+            return;
+        }
+
+        const amount = parseFloat(document.getElementById('payout-amount-input').value);
+        const transferMethod = document.getElementById('payout-transfer-method').value;
+        const referenceNumber = document.getElementById('payout-reference-number').value.trim();
+        const notes = document.getElementById('payout-notes').value.trim();
+        const fileInput = document.getElementById('payout-receipt-file');
+
+        const submitBtn = document.getElementById('payout-submit-btn');
+        const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري اعتماد الصرف والخصم...</span>`;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('beneficiary_key', beneficiaryKey);
+            formData.append('amount', amount);
+            formData.append('transfer_method', transferMethod);
+            formData.append('reference_number', referenceNumber);
+            formData.append('notes', notes);
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                formData.append('receipt_image', fileInput.files[0]);
+            }
+
+            const res = await this.apiFetch('/api/admin/payouts', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                this.toast('success', data.message || 'تم اعتماد سند الصرف وخصم المبلغ بنجاح');
+                this.closeUnifiedPayoutModal();
+
+                // تحديث كافة التقارير والأرصدة والأرشيف فوراً
+                this.loadAdminProfitAnalytics();
+                this.loadAdminStats();
+                this.loadAdminNetworkAnalytics();
+                this.loadAdminPayoutsArchive();
+
+                // إذا كانت نافذة كشف حساب الشبكة مفتوحة لنفس الشبكة، نحدثها تلقائياً
+                if (this.state.currentNetworkStatement && this.state.currentNetworkStatement.network && data.payout && data.payout.network_id === this.state.currentNetworkStatement.network.id) {
+                    this.openNetworkStatementModal(data.payout.network_id);
+                }
+            } else {
+                this.toast('error', data.message || 'تم رفض عملية الصرف');
+            }
+        } catch (err) {
+            console.error('handleUnifiedPayoutSubmit error:', err);
+            this.toast('error', 'حدث خطأ أثناء تنفيذ عملية الصرف');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnHtml;
+            }
+        }
+    },
+
+    loadAdminPayoutsArchive: async function () {
+        const tbody = document.getElementById('admin-payouts-table-body');
+        const filterSelect = document.getElementById('payouts-archive-beneficiary-filter');
+        const currentFilter = filterSelect ? (filterSelect.value || 'all') : 'all';
+
+        try {
+            // جلب قائمة المستفيدين لتحديث خيارات الفلتر إذا لزم الأمر
+            const [payoutsRes, benRes] = await Promise.all([
+                this.apiFetch(`/api/admin/payouts?beneficiary_key=${encodeURIComponent(currentFilter)}`),
+                this.apiFetch('/api/admin/payouts/beneficiaries')
+            ]);
+
+            const payoutsData = await payoutsRes.json();
+            const benData = await benRes.json();
+
+            if (filterSelect && benData && benData.success && Array.isArray(benData.beneficiaries)) {
+                const prevVal = filterSelect.value || 'all';
+                filterSelect.innerHTML = `<option value="all">كافة المستفيدين (المدير العام + ملاك الشبكات)</option>` +
+                    benData.beneficiaries.map(b => `<option value="${b.key}">${b.label}</option>`).join('');
+                if ([...filterSelect.options].some(o => o.value === prevVal)) {
+                    filterSelect.value = prevVal;
+                }
+            }
+
+            if (!payoutsData || !payoutsData.success) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-rose-400">تعذر جلب أرشيف السندات المصروفة</td></tr>`;
+                return;
+            }
+
+            const summary = payoutsData.summary || {};
+            const elTotal = document.getElementById('archive-total-disbursed');
+            const elAdmin = document.getElementById('archive-admin-disbursed');
+            const elNets = document.getElementById('archive-networks-disbursed');
+            if (elTotal) elTotal.textContent = `${this.fmtNum(summary.total_disbursed_all)} ر.ي`;
+            if (elAdmin) elAdmin.textContent = `${this.fmtNum(summary.total_admin_profit_disbursed)} ر.ي`;
+            if (elNets) elNets.textContent = `${this.fmtNum(summary.total_network_owners_disbursed)} ر.ي`;
+
+            const payouts = payoutsData.payouts || [];
+            if (!tbody) return;
+
+            if (!payouts.length) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-5 text-center text-gray-500">لا توجد سندات صرف أو تحويلات مسجلة ضمن هذا الفرز بعد</td></tr>`;
+                return;
+            }
+
+            this.state.payoutsArchiveCache = payouts;
+
+            tbody.innerHTML = payouts.map(p => {
+                const isAdminPayout = p.beneficiary_type === 'admin_profit';
+                const badge = isAdminPayout
+                    ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/15 text-amber-300 border border-amber-500/30">أرباح المنصة</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-teal-500/15 text-teal-300 border border-teal-500/30">تسوية شبكة</span>`;
+
+                const dateStr = p.created_at
+                    ? new Date(p.created_at).toLocaleDateString('ar-YE', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : '-';
+
+                const hasReceipt = !!(p.receipt_data_uri || p.receipt_image);
+                const receiptBtn = hasReceipt
+                    ? `<button onclick="app.openPayoutReceiptById(${p.id})" class="px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-[10px] font-bold flex items-center gap-1"><i class="fa-solid fa-image"></i> عرض السند</button>`
+                    : `<span class="text-gray-500 text-[10px]">بدون مرفق</span>`;
+
+                return `
+                    <tr class="hover:bg-gray-800/50 transition">
+                        <td class="p-3 text-gray-400 text-[10px] font-mono whitespace-nowrap">${dateStr}</td>
+                        <td class="p-3">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="font-bold text-white text-xs">${p.beneficiary_label}</span>
+                                <div>${badge}</div>
+                            </div>
+                        </td>
+                        <td class="p-3 font-mono font-black text-rose-400 text-xs whitespace-nowrap">-${this.fmtNum(p.amount)} ر.ي</td>
+                        <td class="p-3 font-mono font-bold text-emerald-400 text-xs whitespace-nowrap">${this.fmtNum(p.balance_after)} ر.ي</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-200 font-bold text-[10px]">${p.transfer_method || '-'}</span>
+                        </td>
+                        <td class="p-3 font-mono text-[11px] text-amber-300 font-bold">${p.voucher_number || p.reference_number || '-'}</td>
+                        <td class="p-3">${receiptBtn}</td>
+                        <td class="p-3 text-gray-300 text-[11px] max-w-xs">${p.notes || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('loadAdminPayoutsArchive error:', err);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-rose-400">حدث خطأ أثناء تحميل أرشيف الصرف والتسويات</td></tr>`;
+        }
+    },
+
+    openPayoutReceiptById: function (payoutId) {
+        const list = this.state.payoutsArchiveCache || [];
+        const p = list.find(item => item.id === payoutId);
+        if (!p) return;
+        const src = p.receipt_data_uri || p.receipt_image;
+        if (!src) {
+            this.toast('info', 'لا توجد صورة سند مرفقة لهذه العملية');
+            return;
+        }
+        this.viewReceiptModal(src, `${p.beneficiary_label} (${p.voucher_number || ''})`, p.amount, p.transfer_method);
     },
 
     // ==================== 9. نظام التنبيهات العائمة (Toast) ====================

@@ -40,8 +40,9 @@ if sys.platform == 'win32':
     except Exception:
         pass
 
+import base64
 # استيراد النماذج وقاعدة البيانات
-from models import db, User, Network, CardPackage, Card, Order, Deposit, BankAccount, SessionToken, OtpRecord
+from models import db, User, Network, CardPackage, Card, Order, Deposit, BankAccount, SessionToken, OtpRecord, Payout
 
 # إعدادات التطبيق
 app = Flask(__name__, static_folder='public')
@@ -139,6 +140,182 @@ def parse_iso_date(date_str, is_end=False):
         return datetime.fromisoformat(clean)
     except Exception:
         return None
+
+# ==================== دوال المحاسبة وصرف المستحقات والأرباح الموحدة ====================
+
+def get_network_owner_user(net):
+    """جلب حساب مالك الشبكة المرتبط بالشبكة إن وجد"""
+    if not net:
+        return None
+    if net.owner_id:
+        u = User.query.get(net.owner_id)
+        if u:
+            return u
+    return User.query.filter_by(network_id=net.id, role='network_owner').first()
+
+def compute_card_sale_split(card):
+    """احتساب سعر البيع، مستحقات مالك الشبكة (سعر التكلفة)، وصافي ربح المنصة للكرت المباع"""
+    if not card or not card.package:
+        return 0.0, 0.0, 0.0
+    p_price = float(card.package.price or 0)
+    raw_cost = getattr(card.package, 'cost_price', None)
+    p_cost = float(raw_cost if raw_cost is not None and raw_cost > 0 else p_price * 0.85)
+    p_profit = max(0.0, p_price - p_cost)
+    return round(p_price, 2), round(p_cost, 2), round(p_profit, 2)
+
+def compute_admin_profit_financials():
+    """احتساب أرباح المنصة الإجمالية، المسحوبات المصروفة للمدير العام، والرصيد المتاح للصرف حالياً"""
+    sold_cards = Card.query.filter_by(status='sold').all()
+    gross_profit = 0.0
+    total_sales = 0.0
+    for c in sold_cards:
+        p_price, p_cost, p_profit = compute_card_sale_split(c)
+        total_sales += p_price
+        gross_profit += p_profit
+
+    gross_profit = round(gross_profit, 2)
+    total_sales = round(total_sales, 2)
+
+    admin_payouts = Payout.query.filter_by(beneficiary_type='admin_profit').all()
+    disbursed_amount = round(sum(float(p.amount or 0) for p in admin_payouts), 2)
+    available_balance = round(max(0.0, gross_profit - disbursed_amount), 2)
+
+    return {
+        "total_sales": total_sales,
+        "gross_profit": gross_profit,
+        "disbursed_amount": disbursed_amount,
+        "available_balance": available_balance,
+        "payouts_count": len(admin_payouts)
+    }
+
+def compute_network_financials(net):
+    """احتساب مستحقات مالك الشبكة الإجمالية، المسحوبات المسلمة، والرصيد المستحق المتاح للصرف"""
+    if not net:
+        return {
+            "total_sales": 0.0,
+            "gross_dues": 0.0,
+            "disbursed_amount": 0.0,
+            "available_balance": 0.0,
+            "net_profit": 0.0,
+            "payouts_count": 0
+        }
+
+    sold_cards = Card.query.filter_by(network_id=net.id, status='sold').all()
+    total_sales = 0.0
+    sales_dues = 0.0
+    net_profit = 0.0
+    for c in sold_cards:
+        p_price, p_cost, p_profit = compute_card_sale_split(c)
+        total_sales += p_price
+        sales_dues += p_cost
+        net_profit += p_profit
+
+    total_sales = round(total_sales, 2)
+    sales_dues = round(sales_dues, 2)
+    net_profit = round(net_profit, 2)
+
+    owner_user = get_network_owner_user(net)
+    net_payouts = Payout.query.filter(
+        (Payout.network_id == net.id) |
+        (Payout.beneficiary_key == f"network_{net.id}")
+    ).all()
+    disbursed_amount = round(sum(float(p.amount or 0) for p in net_payouts), 2)
+
+    if sales_dues > 0:
+        gross_dues = sales_dues
+        available_balance = round(max(0.0, gross_dues - disbursed_amount), 2)
+    elif owner_user and float(owner_user.balance or 0) > 0:
+        available_balance = round(float(owner_user.balance or 0), 2)
+        gross_dues = round(available_balance + disbursed_amount, 2)
+    else:
+        gross_dues = sales_dues
+        available_balance = round(max(0.0, gross_dues - disbursed_amount), 2)
+
+    return {
+        "total_sales": total_sales,
+        "gross_dues": gross_dues,
+        "disbursed_amount": disbursed_amount,
+        "available_balance": available_balance,
+        "net_profit": net_profit,
+        "payouts_count": len(net_payouts),
+        "owner_user": owner_user
+    }
+
+def get_all_payout_beneficiaries():
+    """بناء القائمة الموحدة للمستفيدين (حساب المدير العام + جميع ملاك الشبكات) مع أرصدتهم الفورية"""
+    beneficiaries = []
+
+    # 1. حساب المدير العام (أرباح المنصة)
+    admin_user = User.query.filter(
+        (User.username == "مشعل المريسي") | (User.role == "admin")
+    ).order_by(User.id.asc()).first()
+    admin_fin = compute_admin_profit_financials()
+    beneficiaries.append({
+        "key": "admin_profit",
+        "beneficiary_type": "admin_profit",
+        "label": f"حساب المدير العام (أرباح المنصة) — {admin_user.full_name if admin_user else 'مشعل المريسي'}",
+        "beneficiary_name": "حساب المدير العام (أرباح المنصة)",
+        "user_id": admin_user.id if admin_user else None,
+        "network_id": None,
+        "gross_earned": admin_fin["gross_profit"],
+        "gross_dues": admin_fin["gross_profit"],
+        "total_disbursed": admin_fin["disbursed_amount"],
+        "available_balance": admin_fin["available_balance"]
+    })
+
+    # 2. جميع ملاك الشبكات والشبكات المسجلة
+    covered_owner_ids = set()
+    networks = Network.query.order_by(Network.id.asc()).all()
+    for net in networks:
+        fin = compute_network_financials(net)
+        owner_u = fin["owner_user"]
+        if owner_u:
+            covered_owner_ids.add(owner_u.id)
+            label = f"مالك الشبكة: {owner_u.full_name} ({net.name})"
+            b_name = f"مالك الشبكة: {owner_u.full_name} - {net.name}"
+        else:
+            label = f"مالك شبكة: {net.name}"
+            b_name = f"مالك شبكة: {net.name}"
+
+        beneficiaries.append({
+            "key": f"network_{net.id}",
+            "beneficiary_type": "network_owner",
+            "label": label,
+            "beneficiary_name": b_name,
+            "user_id": owner_u.id if owner_u else None,
+            "network_id": net.id,
+            "network_name": net.name,
+            "owner_name": owner_u.full_name if owner_u else net.name,
+            "gross_earned": fin["gross_dues"],
+            "gross_dues": fin["gross_dues"],
+            "total_disbursed": fin["disbursed_amount"],
+            "available_balance": fin["available_balance"]
+        })
+
+    # 3. ملاك الشبكات المستقلين غير المربوطين بشبكة بعد (إن وجدوا)
+    standalone_owners = User.query.filter_by(role='network_owner').order_by(User.id.asc()).all()
+    for u in standalone_owners:
+        if u.id in covered_owner_ids:
+            continue
+        u_payouts = Payout.query.filter_by(beneficiary_key=f"user_{u.id}").all()
+        u_disb = round(sum(float(p.amount or 0) for p in u_payouts), 2)
+        u_avail = round(max(0.0, float(u.balance or 0)), 2)
+        beneficiaries.append({
+            "key": f"user_{u.id}",
+            "beneficiary_type": "network_owner",
+            "label": f"مالك الشبكة: {u.full_name} ({u.username})",
+            "beneficiary_name": f"مالك الشبكة: {u.full_name}",
+            "user_id": u.id,
+            "network_id": u.network_id,
+            "network_name": "",
+            "owner_name": u.full_name,
+            "gross_earned": round(u_avail + u_disb, 2),
+            "gross_dues": round(u_avail + u_disb, 2),
+            "total_disbursed": u_disb,
+            "available_balance": u_avail
+        })
+
+    return beneficiaries
 
 # ==================== خدمة التلجرام الموسعة مع اعتماد السندات ====================
 
@@ -751,6 +928,14 @@ def api_shop_purchase():
         locked_card.buyer_id = locked_user.id
         locked_card.purchased_at = datetime.utcnow()
 
+        # تحديث رصيد مالك الشبكة المرتبط بمستحقاته من بيع الكرت تلقائياً
+        raw_cost = getattr(pkg, 'cost_price', None)
+        p_cost = round(float(raw_cost if raw_cost is not None and raw_cost > 0 else float(pkg.price or 0) * 0.85), 2)
+        if locked_card.network:
+            owner_u = get_network_owner_user(locked_card.network)
+            if owner_u and owner_u.id != locked_user.id:
+                owner_u.balance = round(float(owner_u.balance or 0) + p_cost, 2)
+
         order_num = f"ORD-{int(time.time())}-{random.randint(1000, 9999)}"
         order = Order(
             order_number=order_num,
@@ -924,6 +1109,67 @@ def api_wallet_transactions():
             "status": "مكتمل"
         })
 
+    # إذا كان المستخدم مدير عام أو مالك شبكة، ندرج المستحقات والمسحوبات في كشف حركاته
+    if user.role == 'admin':
+        for c in Card.query.filter_by(status='sold').all():
+            p_price, p_cost, p_profit = compute_card_sale_split(c)
+            if p_profit > 0:
+                raw_events.append({
+                    "id": f"prof-{c.id}",
+                    "type": "profit",
+                    "title": "ربح بيع كرت بالمنصة",
+                    "description": f"ربح المنصة من بيع كرت ({c.package.name if c.package else ''}) - {c.network.name if c.network else ''}",
+                    "amount": p_profit,
+                    "created_at": c.purchased_at.isoformat() if c.purchased_at else '',
+                    "status": "مكتمل"
+                })
+        for p in Payout.query.filter_by(beneficiary_type='admin_profit').all():
+            ref_part = f" | رقم الحوالة/المرجع: {p.reference_number}" if p.reference_number else ""
+            note_part = f" | {p.notes}" if p.notes and p.notes != p.reference_number else ""
+            raw_events.append({
+                "id": f"pay-{p.id}",
+                "type": "payout",
+                "title": "صرف مستحقات / أرباح",
+                "voucher_number": p.voucher_number,
+                "description": f"صرف مستحقات / أرباح - سند رقم ({p.voucher_number}) عبر {p.transfer_method}{ref_part}{note_part}",
+                "amount": -round(float(p.amount or 0), 2),
+                "created_at": p.created_at.isoformat() if p.created_at else '',
+                "status": "مكتمل"
+            })
+    elif user.role == 'network_owner':
+        owner_net = get_owner_network(user)
+        if owner_net:
+            for c in Card.query.filter_by(network_id=owner_net.id, status='sold').all():
+                p_price, p_cost, p_profit = compute_card_sale_split(c)
+                raw_events.append({
+                    "id": f"netdue-{c.id}",
+                    "type": "network_due",
+                    "title": "مستحقات بيع كرت شبكة",
+                    "description": f"مستحقات بيع كرت ({c.package.name if c.package else ''}) رقم {c.pin_code}",
+                    "amount": p_cost,
+                    "created_at": c.purchased_at.isoformat() if c.purchased_at else '',
+                    "status": "مكتمل"
+                })
+            net_payouts = Payout.query.filter(
+                (Payout.network_id == owner_net.id) | (Payout.user_id == user.id)
+            ).all()
+        else:
+            net_payouts = Payout.query.filter_by(user_id=user.id).all()
+
+        for p in net_payouts:
+            ref_part = f" | رقم الحوالة/المرجع: {p.reference_number}" if p.reference_number else ""
+            note_part = f" | {p.notes}" if p.notes and p.notes != p.reference_number else ""
+            raw_events.append({
+                "id": f"pay-{p.id}",
+                "type": "payout",
+                "title": "صرف مستحقات / أرباح",
+                "voucher_number": p.voucher_number,
+                "description": f"صرف مستحقات / أرباح - سند رقم ({p.voucher_number}) عبر {p.transfer_method}{ref_part}{note_part}",
+                "amount": -round(float(p.amount or 0), 2),
+                "created_at": p.created_at.isoformat() if p.created_at else '',
+                "status": "مكتمل"
+            })
+
     # ترتيب زمني تصاعدي لحساب الرصيد التراكمي بدقة ثم عكس الترتيب للأحدث أولاً
     raw_events.sort(key=lambda x: x['created_at'])
     running_balance = 0.0
@@ -962,7 +1208,7 @@ def api_network_owner_my_network():
     total_cards = len(cards)
     available_cards = sum(1 for c in cards if c.status == 'available')
     sold_cards = sum(1 for c in cards if c.status == 'sold')
-    total_sales = round(sum(float(c.package.price) for c in cards if c.status == 'sold' and c.package), 2)
+    fin = compute_network_financials(net)
 
     return jsonify(
         success=True,
@@ -975,8 +1221,11 @@ def api_network_owner_my_network():
             "available_cards_count": available_cards,
             "sold_cards": sold_cards,
             "sold_cards_count": sold_cards,
-            "total_sales": total_sales,
-            "total_revenue": total_sales
+            "total_sales": fin["total_sales"],
+            "total_revenue": fin["total_sales"],
+            "total_owner_dues": fin["gross_dues"],
+            "total_payouts_disbursed": fin["disbursed_amount"],
+            "available_balance": fin["available_balance"]
         }
     )
 
@@ -1199,6 +1448,113 @@ def api_network_owner_delete_card(card_id):
     db.session.commit()
     return jsonify(success=True, message="تم حذف الكرت من المخزون بنجاح")
 
+def build_network_statement_response(net, dt_from=None, dt_to=None):
+    """بناء كشف الحساب التفصيلي للشبكة شاملاً الكروت المباعة + دفتر أستاذ المستحقات والمسحوبات المسلمة"""
+    query = Card.query.filter_by(network_id=net.id, status='sold')
+    if dt_from:
+        query = query.filter(Card.purchased_at >= dt_from)
+    if dt_to:
+        query = query.filter(Card.purchased_at <= dt_to)
+
+    sold_cards = query.order_by(Card.purchased_at.desc()).all()
+    items = []
+    total_sales = 0.0
+    total_owner_dues = 0.0
+    ledger_events = []
+
+    for c in sold_cards:
+        p_price, p_cost, p_profit = compute_card_sale_split(c)
+        total_sales += p_price
+        total_owner_dues += p_cost
+        buyer = User.query.get(c.buyer_id) if c.buyer_id else None
+        dt_iso = c.purchased_at.isoformat() if c.purchased_at else ''
+        items.append({
+            "card_id": c.id,
+            "package_name": c.package.name if c.package else '',
+            "price": p_price,
+            "owner_due": p_cost,
+            "pin_code": c.pin_code,
+            "serial_number": c.serial_number or f"SN-{c.id}",
+            "buyer_name": buyer.full_name if buyer else 'عميل',
+            "purchased_at": dt_iso
+        })
+        ledger_events.append({
+            "type": "sale_due",
+            "transaction_type": "sale_due",
+            "category": "مستحقات مبيعات كروت",
+            "category_label": "مستحقات مبيعات كروت",
+            "voucher_number": f"ORD-{c.id}",
+            "description": f"مستحقات بيع كرت ({c.package.name if c.package else ''}) - PIN: {c.pin_code}",
+            "transfer_method": "مبيعات المنصة",
+            "amount": p_cost,
+            "created_at": dt_iso
+        })
+
+    payout_q = Payout.query.filter(
+        (Payout.network_id == net.id) |
+        (Payout.beneficiary_key == f"network_{net.id}")
+    )
+    if dt_from:
+        payout_q = payout_q.filter(Payout.created_at >= dt_from)
+    if dt_to:
+        payout_q = payout_q.filter(Payout.created_at <= dt_to)
+    net_payouts = payout_q.order_by(Payout.created_at.desc()).all()
+
+    for p in net_payouts:
+        ref_part = f" | رقم الحوالة/المرجع: {p.reference_number}" if p.reference_number else ""
+        note_part = f" | {p.notes}" if p.notes and p.notes != p.reference_number else ""
+        ledger_events.append({
+            "type": "payout_settlement",
+            "transaction_type": "payout_settlement",
+            "category": "صرف مستحقات / أرباح",
+            "category_label": "صرف مستحقات / أرباح",
+            "voucher_number": p.voucher_number,
+            "description": f"صرف مستحقات / أرباح - سند رقم ({p.voucher_number}) عبر {p.transfer_method}{ref_part}{note_part}",
+            "transfer_method": p.transfer_method,
+            "reference_number": p.reference_number or "",
+            "notes": p.notes or "",
+            "receipt_image": p.receipt_img or "",
+            "amount": -round(float(p.amount or 0), 2),
+            "created_at": p.created_at.isoformat() if p.created_at else ''
+        })
+
+    ledger_events.sort(key=lambda x: x['created_at'])
+    running_bal = 0.0
+    for ev in ledger_events:
+        running_bal = round(running_bal + float(ev['amount']), 2)
+        ev['balance_after'] = running_bal
+    ledger_events.reverse()
+
+    fin = compute_network_financials(net)
+    filtered_disbursed = round(sum(float(p.amount or 0) for p in net_payouts), 2)
+    final_owner_dues = round(total_owner_dues, 2) if (dt_from or dt_to) else fin["gross_dues"]
+    final_disbursed = filtered_disbursed if (dt_from or dt_to) else fin["disbursed_amount"]
+
+    summary_obj = {
+        "total_sales": round(total_sales, 2),
+        "owner_gross_dues": final_owner_dues,
+        "total_owner_dues": final_owner_dues,
+        "total_disbursed": final_disbursed,
+        "total_payouts_disbursed": final_disbursed,
+        "available_balance": fin["available_balance"],
+        "sold_count": len(items)
+    }
+
+    return jsonify(
+        success=True,
+        network=net.to_dict(include_packages=False),
+        summary=summary_obj,
+        total_sales=round(total_sales, 2),
+        total_owner_dues=final_owner_dues,
+        total_payouts_disbursed=final_disbursed,
+        available_balance=fin["available_balance"],
+        sold_count=len(items),
+        items=items,
+        payouts=[p.to_dict() for p in net_payouts],
+        transactions=ledger_events,
+        ledger=ledger_events
+    )
+
 @app.route('/api/network-owner/statement', methods=['GET'])
 def api_network_owner_statement():
     user = get_current_user()
@@ -1211,38 +1567,7 @@ def api_network_owner_statement():
 
     dt_from = parse_iso_date(request.args.get('date_from'))
     dt_to = parse_iso_date(request.args.get('date_to'), is_end=True)
-
-    query = Card.query.filter_by(network_id=net.id, status='sold')
-    if dt_from:
-        query = query.filter(Card.purchased_at >= dt_from)
-    if dt_to:
-        query = query.filter(Card.purchased_at <= dt_to)
-
-    sold_cards = query.order_by(Card.purchased_at.desc()).all()
-    items = []
-    total_sales = 0.0
-
-    for c in sold_cards:
-        p_price = float(c.package.price or 0) if c.package else 0.0
-        total_sales += p_price
-        buyer = User.query.get(c.buyer_id) if c.buyer_id else None
-        items.append({
-            "card_id": c.id,
-            "package_name": c.package.name if c.package else '',
-            "price": round(p_price, 2),
-            "pin_code": c.pin_code,
-            "serial_number": c.serial_number or f"SN-{c.id}",
-            "buyer_name": buyer.full_name if buyer else 'عميل',
-            "purchased_at": c.purchased_at.isoformat() if c.purchased_at else ''
-        })
-
-    return jsonify(
-        success=True,
-        network=net.to_dict(include_packages=False),
-        total_sales=round(total_sales, 2),
-        sold_count=len(items),
-        items=items
-    )
+    return build_network_statement_response(net, dt_from, dt_to)
 
 # ==================== 5. لوحة تحكم المدير العام (Super Admin API) ====================
 
@@ -1291,6 +1616,8 @@ def api_admin_stats():
     total_sales = round(sum(float(c.package.price or 0) for c in Card.query.filter_by(status='sold').all() if c.package), 2)
     pending_deposits = Deposit.query.filter_by(status='pending').count()
     approved_deposits = round(sum(float(d.approved_amount if d.approved_amount is not None else (d.amount or 0)) for d in Deposit.query.filter_by(status='approved').all()), 2)
+    total_payouts_disbursed = round(sum(float(p.amount or 0) for p in Payout.query.all()), 2)
+    admin_fin = compute_admin_profit_financials()
 
     return jsonify(
         success=True,
@@ -1307,7 +1634,9 @@ def api_admin_stats():
             "pending_deposits_count": pending_deposits,
             "approved_deposits": approved_deposits,
             "total_deposits_approved_amount": approved_deposits,
-            "estimated_profit": round(total_sales * 0.15, 2)
+            "estimated_profit": admin_fin["gross_profit"],
+            "available_admin_profit": admin_fin["available_balance"],
+            "total_payouts_disbursed": total_payouts_disbursed
         }
     )
 
@@ -1326,7 +1655,7 @@ def api_admin_network_analytics():
         avail_count = Card.query.filter_by(network_id=net.id, status='available').count()
         sold_cards_list = Card.query.filter_by(network_id=net.id, status='sold').all()
         sold_count = len(sold_cards_list)
-        revenue = round(sum(float(c.package.price or 0) for c in sold_cards_list if c.package), 2)
+        fin = compute_network_financials(net)
 
         analytics.append({
             "id": net.id,
@@ -1337,14 +1666,17 @@ def api_admin_network_analytics():
             "total_packages": pkgs_count,
             "available_cards": avail_count,
             "sold_cards": sold_count,
-            "total_revenue": revenue
+            "total_revenue": fin["total_sales"],
+            "owner_dues": fin["gross_dues"],
+            "disbursed_amount": fin["disbursed_amount"],
+            "available_balance": fin["available_balance"]
         })
 
     return jsonify(success=True, analytics=analytics)
 
 @app.route('/api/admin/profit-analytics', methods=['GET'])
 def api_admin_profit_analytics():
-    """محرك احتساب الأرباح والمبيعات ومستحقات الشبكات مع فلترة التواريخ"""
+    """محرك احتساب الأرباح والمبيعات ومستحقات الشبكات وإجمالي المسحوبات والتسويات المسلمة"""
     user = get_current_user()
     if not user or user.role != 'admin':
         return jsonify(success=False, message="صلاحية غير مصرح بها"), 403
@@ -1360,6 +1692,8 @@ def api_admin_profit_analytics():
     grand_net_profit = 0.0
     grand_sold_cards = 0
     grand_avail_cards = 0
+    grand_owners_disbursed = 0.0
+    grand_owners_available = 0.0
 
     for net in networks:
         sold_query = Card.query.filter_by(network_id=net.id, status='sold')
@@ -1375,28 +1709,32 @@ def api_admin_profit_analytics():
         net_sales = 0.0
         net_cost = 0.0
         for c in sold_cards_list:
-            if c.package:
-                p_price = float(c.package.price or 0)
-                raw_cost = getattr(c.package, 'cost_price', None)
-                p_cost = float(raw_cost if raw_cost is not None and raw_cost > 0 else p_price * 0.85)
-                net_sales += p_price
-                net_cost += p_cost
+            p_price, p_cost, p_profit = compute_card_sale_split(c)
+            net_sales += p_price
+            net_cost += p_cost
 
         net_sales = round(net_sales, 2)
         net_cost = round(net_cost, 2)
         net_profit = round(net_sales - net_cost, 2)
         margin_pct = round((net_profit / net_sales) * 100, 1) if net_sales > 0 else 15.0
 
+        fin = compute_network_financials(net)
+        owner_u = fin["owner_user"]
+
         grand_sales += net_sales
-        grand_owner_payouts += net_cost
+        grand_owner_payouts += fin["gross_dues"] if not (dt_from or dt_to) else net_cost
         grand_net_profit += net_profit
         grand_sold_cards += len(sold_cards_list)
         grand_avail_cards += avail_count
+        grand_owners_disbursed += fin["disbursed_amount"]
+        grand_owners_available += fin["available_balance"]
 
         net_reports.append({
             "id": net.id,
             "name": net.name,
             "code": net.code,
+            "owner_name": owner_u.full_name if owner_u else net.name,
+            "beneficiary_key": f"network_{net.id}",
             "logo_icon": net.logo_icon or 'fa-wifi',
             "total_packages": pkgs_count,
             "packages_count": pkgs_count,
@@ -1405,13 +1743,28 @@ def api_admin_profit_analytics():
             "available_cards": avail_count,
             "available_cards_count": avail_count,
             "total_sales": net_sales,
-            "owner_payout": net_cost,
-            "owner_net_profit": net_cost,
+            "owner_payout": fin["gross_dues"] if not (dt_from or dt_to) else net_cost,
+            "owner_net_profit": fin["gross_dues"] if not (dt_from or dt_to) else net_cost,
+            "disbursed_amount": fin["disbursed_amount"],
+            "available_payout": fin["available_balance"],
             "net_profit": net_profit,
             "system_commission": net_profit,
             "profit_margin_percent": margin_pct
         })
 
+    # احتساب المسحوبات المسلمة للمدير العام وإجمالي المسحوبات والتسويات المسلمة في النظام
+    payout_query = Payout.query
+    if dt_from:
+        payout_query = payout_query.filter(Payout.created_at >= dt_from)
+    if dt_to:
+        payout_query = payout_query.filter(Payout.created_at <= dt_to)
+    filtered_payouts = payout_query.all()
+
+    total_disbursed_all = round(sum(float(p.amount or 0) for p in filtered_payouts), 2)
+    admin_disbursed = round(sum(float(p.amount or 0) for p in filtered_payouts if p.beneficiary_type == 'admin_profit'), 2)
+    owners_disbursed = round(sum(float(p.amount or 0) for p in filtered_payouts if p.beneficiary_type == 'network_owner'), 2)
+
+    admin_fin = compute_admin_profit_financials()
     grand_sales = round(grand_sales, 2)
     grand_owner_payouts = round(grand_owner_payouts, 2)
     grand_net_profit = round(grand_net_profit, 2)
@@ -1422,8 +1775,14 @@ def api_admin_profit_analytics():
         "total_platform_sales": grand_sales,
         "total_owner_payouts": grand_owner_payouts,
         "total_network_payouts": grand_owner_payouts,
+        "available_owner_payouts": round(grand_owners_available, 2),
         "total_net_profit": grand_net_profit,
         "total_admin_profit": grand_net_profit,
+        "available_admin_profit": admin_fin["available_balance"],
+        "total_disbursed_payouts": total_disbursed_all,
+        "total_payouts_disbursed": total_disbursed_all,
+        "admin_disbursed_payouts": admin_disbursed,
+        "owners_disbursed_payouts": owners_disbursed,
         "overall_profit_margin_percent": overall_margin,
         "total_sold_cards": grand_sold_cards,
         "total_cards_sold": grand_sold_cards,
@@ -1437,7 +1796,9 @@ def api_admin_profit_analytics():
         grand_total_sales=grand_sales,
         grand_sold_cards=grand_sold_cards,
         grand_system_profit=grand_net_profit,
-        networks=net_reports
+        total_disbursed_payouts=total_disbursed_all,
+        networks=net_reports,
+        beneficiaries=get_all_payout_beneficiaries()
     )
 
 @app.route('/api/admin/deposits', methods=['GET'])
@@ -1601,6 +1962,7 @@ def api_admin_user_modify(u_id):
         # فك ارتباط الشبكات والكروت والطلبات قبل حذف الحساب
         Network.query.filter_by(owner_id=target.id).update({"owner_id": None})
         Card.query.filter_by(buyer_id=target.id).update({"buyer_id": None})
+        Payout.query.filter_by(user_id=target.id).update({"user_id": None})
         SessionToken.query.filter_by(user_id=target.id).delete()
         Order.query.filter_by(user_id=target.id).delete()
         Deposit.query.filter_by(user_id=target.id).delete()
@@ -1680,7 +2042,7 @@ def api_admin_user_balance(u_id):
 
 @app.route('/api/admin/users/<int:u_id>/statement', methods=['GET'])
 def api_admin_user_statement(u_id):
-    """كشف حساب مفصل للعميل (للمدير العام أو للعميل نفسه)"""
+    """كشف حساب مفصل للمستخدم / المستفيد (العميل، مالك الشبكة، أو المدير العام)"""
     user = get_current_user()
     if not user or (user.role != 'admin' and user.id != u_id):
         return jsonify(success=False, message="صلاحية غير مصرح بها"), 403
@@ -1713,18 +2075,22 @@ def api_admin_user_statement(u_id):
     total_bonus = round(sum(float(d.bonus_amount or 0) for d in approved_deps), 2)
     total_spent = round(sum(float(c.package.price or 0) for c in bought_cards if c.package), 2)
 
-    # بناء دفتر الأستاذ (Ledger)
+    # بناء دفتر الأستاذ (Transactions Ledger)
     events = []
     for d in approved_deps:
         dt_s = d.reviewed_at.isoformat() if d.reviewed_at else (d.created_at.isoformat() if d.created_at else '')
         amt = round(float(d.approved_amount if d.approved_amount is not None else (d.amount or 0)), 2)
         events.append({
+            "type": "deposit",
+            "category": "إيداع رصيد",
             "description": f"إيداع رصيد معتمد ({d.bank_name})",
             "amount": amt,
             "created_at": dt_s
         })
         if d.bonus_amount and float(d.bonus_amount) > 0:
             events.append({
+                "type": "bonus",
+                "category": "بونص مجاني 10%",
                 "description": f"بونص إضافي مجاني 10% (إيداع #{d.id})",
                 "amount": round(float(d.bonus_amount), 2),
                 "created_at": dt_s
@@ -1734,9 +2100,91 @@ def api_admin_user_statement(u_id):
         pkg = CardPackage.query.get(o.package_id)
         pkg_name = pkg.name if pkg else 'باقة واي فاي'
         events.append({
+            "type": "purchase",
+            "category": "شراء كرت",
             "description": f"شراء كرت: {pkg_name}",
             "amount": -round(float(o.amount or 0), 2),
             "created_at": o.created_at.isoformat() if o.created_at else ''
+        })
+
+    # إضافة القيود المحاسبية للأرباح ومستحقات الشبكات وسندات الصرف والتسوية
+    total_payouts_disbursed = 0.0
+    effective_balance = round(float(target.balance or 0), 2)
+
+    if target.role == 'admin':
+        sold_q = Card.query.filter_by(status='sold')
+        if dt_from:
+            sold_q = sold_q.filter(Card.purchased_at >= dt_from)
+        if dt_to:
+            sold_q = sold_q.filter(Card.purchased_at <= dt_to)
+        for c in sold_q.all():
+            p_price, p_cost, p_profit = compute_card_sale_split(c)
+            if p_profit > 0:
+                events.append({
+                    "type": "profit",
+                    "category": "أرباح المنصة",
+                    "description": f"ربح المنصة من بيع كرت ({c.package.name if c.package else ''}) - {c.network.name if c.network else ''}",
+                    "amount": p_profit,
+                    "created_at": c.purchased_at.isoformat() if c.purchased_at else ''
+                })
+
+        pay_q = Payout.query.filter_by(beneficiary_type='admin_profit')
+        if dt_from:
+            pay_q = pay_q.filter(Payout.created_at >= dt_from)
+        if dt_to:
+            pay_q = pay_q.filter(Payout.created_at <= dt_to)
+        user_payouts = pay_q.all()
+        admin_fin = compute_admin_profit_financials()
+        effective_balance = admin_fin["available_balance"]
+    elif target.role == 'network_owner':
+        owner_nets = Network.query.filter((Network.owner_id == target.id) | (Network.id == target.network_id)).all()
+        net_ids = [n.id for n in owner_nets]
+        if net_ids:
+            sold_q = Card.query.filter(Card.network_id.in_(net_ids), Card.status == 'sold')
+            if dt_from:
+                sold_q = sold_q.filter(Card.purchased_at >= dt_from)
+            if dt_to:
+                sold_q = sold_q.filter(Card.purchased_at <= dt_to)
+            for c in sold_q.all():
+                p_price, p_cost, p_profit = compute_card_sale_split(c)
+                events.append({
+                    "type": "network_due",
+                    "category": "مستحقات مبيعات كروت",
+                    "description": f"مستحقات بيع كرت ({c.package.name if c.package else ''}) رقم {c.pin_code}",
+                    "amount": p_cost,
+                    "created_at": c.purchased_at.isoformat() if c.purchased_at else ''
+                })
+            pay_q = Payout.query.filter((Payout.network_id.in_(net_ids)) | (Payout.user_id == target.id))
+            fin = compute_network_financials(owner_nets[0])
+            effective_balance = fin["available_balance"]
+        else:
+            pay_q = Payout.query.filter_by(user_id=target.id)
+        if dt_from:
+            pay_q = pay_q.filter(Payout.created_at >= dt_from)
+        if dt_to:
+            pay_q = pay_q.filter(Payout.created_at <= dt_to)
+        user_payouts = pay_q.all()
+    else:
+        pay_q = Payout.query.filter_by(user_id=target.id)
+        if dt_from:
+            pay_q = pay_q.filter(Payout.created_at >= dt_from)
+        if dt_to:
+            pay_q = pay_q.filter(Payout.created_at <= dt_to)
+        user_payouts = pay_q.all()
+
+    for p in user_payouts:
+        p_amt = round(float(p.amount or 0), 2)
+        total_payouts_disbursed += p_amt
+        ref_part = f" | رقم الحوالة/المرجع: {p.reference_number}" if p.reference_number else ""
+        note_part = f" | {p.notes}" if p.notes and p.notes != p.reference_number else ""
+        events.append({
+            "type": "payout",
+            "category": "صرف مستحقات / أرباح",
+            "voucher_number": p.voucher_number,
+            "transfer_method": p.transfer_method,
+            "description": f"صرف مستحقات / أرباح - سند رقم ({p.voucher_number}) عبر {p.transfer_method}{ref_part}{note_part}",
+            "amount": -p_amt,
+            "created_at": p.created_at.isoformat() if p.created_at else ''
         })
 
     events.sort(key=lambda x: x['created_at'])
@@ -1746,17 +2194,23 @@ def api_admin_user_statement(u_id):
         ev['balance_after'] = running_bal
     events.reverse()
 
+    u_dict = target.to_dict()
+    if target.role in ['admin', 'network_owner']:
+        u_dict['balance'] = effective_balance
+
     return jsonify(
         success=True,
-        user=target.to_dict(),
+        user=u_dict,
         summary={
-            "current_balance": round(float(target.balance or 0), 2),
+            "current_balance": effective_balance,
             "total_deposits_approved": total_dep,
             "total_bonus_received": total_bonus,
             "cards_bought_count": len(bought_cards),
-            "total_cards_spent": total_spent
+            "total_cards_spent": total_spent,
+            "total_payouts_disbursed": round(total_payouts_disbursed, 2)
         },
         cards=[c.to_dict() for c in bought_cards],
+        payouts=[p.to_dict() for p in user_payouts],
         transactions=events
     )
 
@@ -1808,6 +2262,7 @@ def api_admin_network_modify(n_id):
 
     if request.method == 'DELETE' or request.path.endswith('/delete'):
         User.query.filter_by(network_id=net.id).update({"network_id": None})
+        Payout.query.filter_by(network_id=net.id).update({"network_id": None})
         Order.query.filter_by(network_id=net.id).delete()
         Card.query.filter_by(network_id=net.id).delete()
         CardPackage.query.filter_by(network_id=net.id).delete()
@@ -2132,37 +2587,282 @@ def api_admin_network_statement(n_id):
     dt_from = parse_iso_date(request.args.get('date_from'))
     dt_to = parse_iso_date(request.args.get('date_to'), is_end=True)
 
-    query = Card.query.filter_by(network_id=net.id, status='sold')
-    if dt_from:
-        query = query.filter(Card.purchased_at >= dt_from)
-    if dt_to:
-        query = query.filter(Card.purchased_at <= dt_to)
+    return build_network_statement_response(net, dt_from, dt_to)
 
-    sold_cards = query.order_by(Card.purchased_at.desc()).all()
-    items = []
-    total_sales = 0.0
+# ==================== 5.5 نظام صرف وتسوية المستحقات والأرباح الموحد (Unified Payouts) ====================
 
-    for c in sold_cards:
-        p_price = float(c.package.price or 0) if c.package else 0.0
-        total_sales += p_price
-        buyer = User.query.get(c.buyer_id) if c.buyer_id else None
-        items.append({
-            "card_id": c.id,
-            "package_name": c.package.name if c.package else '',
-            "price": round(p_price, 2),
-            "pin_code": c.pin_code,
-            "serial_number": c.serial_number or f"SN-{c.id}",
-            "buyer_name": buyer.full_name if buyer else 'عميل',
-            "purchased_at": c.purchased_at.isoformat() if c.purchased_at else ''
-        })
+@app.route('/api/admin/payouts/beneficiaries', methods=['GET'])
+def api_admin_payout_beneficiaries():
+    user = get_current_user()
+    if not user or user.role != 'admin':
+        return jsonify(success=False, message="صلاحية غير مصرح بها — للمدير العام فقط"), 403
 
+    beneficiaries = get_all_payout_beneficiaries()
+    admin_fin = compute_admin_profit_financials()
     return jsonify(
         success=True,
-        network=net.to_dict(include_packages=False),
-        total_sales=round(total_sales, 2),
-        sold_count=len(items),
-        items=items
+        beneficiaries=beneficiaries,
+        admin_financials=admin_fin
     )
+
+@app.route('/api/admin/payouts', methods=['GET', 'POST'])
+def api_admin_payouts():
+    user = get_current_user()
+    if not user or user.role != 'admin':
+        return jsonify(success=False, message="صلاحية هذه العملية للمدير العام فقط (Admin Only)"), 403
+
+    if request.method == 'GET':
+        beneficiary_filter = (request.args.get('beneficiary_key') or '').strip()
+        beneficiary_type = (request.args.get('beneficiary_type') or '').strip()
+        dt_from = parse_iso_date(request.args.get('date_from'))
+        dt_to = parse_iso_date(request.args.get('date_to'), is_end=True)
+
+        q = Payout.query
+        if beneficiary_filter and beneficiary_filter != 'all':
+            q = q.filter(Payout.beneficiary_key == beneficiary_filter)
+        if beneficiary_type and beneficiary_type != 'all':
+            q = q.filter(Payout.beneficiary_type == beneficiary_type)
+        if dt_from:
+            q = q.filter(Payout.created_at >= dt_from)
+        if dt_to:
+            q = q.filter(Payout.created_at <= dt_to)
+
+        payout_rows = q.order_by(Payout.created_at.desc()).all()
+        payouts_list = [p.to_dict() for p in payout_rows]
+
+        all_payout_rows = Payout.query.all()
+        total_all_disbursed = round(sum(float(p.amount or 0) for p in all_payout_rows), 2)
+        total_admin_disbursed = round(sum(float(p.amount or 0) for p in all_payout_rows if p.beneficiary_type == 'admin_profit'), 2)
+        total_networks_disbursed = round(sum(float(p.amount or 0) for p in all_payout_rows if p.beneficiary_type != 'admin_profit'), 2)
+
+        beneficiaries = get_all_payout_beneficiaries()
+
+        summary_obj = {
+            "total_disbursed_all": total_all_disbursed,
+            "total_admin_profit_disbursed": total_admin_disbursed,
+            "total_network_owners_disbursed": total_networks_disbursed,
+            "filtered_count": len(payouts_list),
+            "filtered_disbursed": round(sum(float(p.amount or 0) for p in payout_rows), 2)
+        }
+
+        return jsonify(
+            success=True,
+            payouts=payouts_list,
+            summary=summary_obj,
+            total_count=len(payouts_list),
+            total_disbursed=total_all_disbursed,
+            total_admin_disbursed=total_admin_disbursed,
+            total_networks_disbursed=total_networks_disbursed,
+            beneficiaries=beneficiaries
+        )
+
+    # POST: إنشاء واعتماد سند صرف مستحقات / أرباح جديد مع قفل المعاملة (with_for_update)
+    if request.form:
+        data = request.form.to_dict()
+    else:
+        data = request.get_json(force=True, silent=True) or {}
+
+    beneficiary_key = (data.get('beneficiary_key') or '').strip()
+    transfer_method = (data.get('transfer_method') or 'الكريمي').strip()
+    reference_number = (data.get('reference_number') or '').strip()
+    notes = (data.get('notes') or '').strip()
+
+    try:
+        amount = round(float(data.get('amount') or 0), 2)
+    except Exception:
+        return jsonify(success=False, message="قيمة المبلغ المراد صرفه غير صالحة"), 400
+
+    if not beneficiary_key:
+        return jsonify(success=False, message="يرجى اختيار المستفيد من القائمة"), 400
+
+    if amount <= 0:
+        return jsonify(success=False, message="يرجى إدخال مبلغ صحيح أكبر من الصفر"), 400
+
+    allowed_methods = ['الكريمي', 'بنك الشرق', 'كاش', 'حوالة أخرى']
+    if transfer_method not in allowed_methods:
+        transfer_method = transfer_method or 'الكريمي'
+
+    # معالجة صورة السند المرفقة (إن وجدت)
+    receipt_img_value = (data.get('receipt_img') or data.get('receipt_base64') or '').strip()
+    uploaded_file = request.files.get('receipt_image') or request.files.get('receipt') or request.files.get('receipt_img')
+    if uploaded_file and uploaded_file.filename:
+        ext = os.path.splitext(uploaded_file.filename)[1].lower()
+        if ext not in ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.pdf']:
+            ext = '.jpg'
+        file_bytes = uploaded_file.read()
+        if file_bytes:
+            fname = f"payout_{int(time.time() * 1000)}_{random.randint(100,999)}{ext}"
+            fpath = os.path.join(UPLOADS_DIR, fname)
+            try:
+                with open(fpath, 'wb') as f_out:
+                    f_out.write(file_bytes)
+            except Exception as e:
+                print("[Payout Receipt File Save Warning]:", e)
+            mime_map = {
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.webp': 'image/webp',
+                '.gif': 'image/gif',
+                '.pdf': 'application/pdf'
+            }
+            mime_t = mime_map.get(ext, 'image/jpeg')
+            b64_str = base64.b64encode(file_bytes).decode('utf-8')
+            receipt_img_value = f"data:{mime_t};base64,{b64_str}"
+
+    try:
+        beneficiary_type = ''
+        beneficiary_name = ''
+        target_user_id = None
+        target_network_id = None
+        available_before = 0.0
+
+        if beneficiary_key == 'admin_profit':
+            # قفل صف المدير العام في قاعدة البيانات لمنع التعارض المتزامن (Concurrency Locking)
+            locked_admin = User.query.filter_by(id=user.id).with_for_update().first()
+            admin_fin = compute_admin_profit_financials()
+            available_before = round(float(admin_fin['available_balance']), 2)
+            beneficiary_type = 'admin_profit'
+            beneficiary_name = 'حساب المدير العام (أرباح المنصة)'
+            target_user_id = locked_admin.id if locked_admin else user.id
+            target_network_id = None
+
+            if amount > available_before:
+                db.session.rollback()
+                return jsonify(
+                    success=False,
+                    message=f"مرفوض: المبلغ المطلوب صرفه ({amount} ر.ي) أكبر من رصيد أرباح المنصة المتاح حالياً ({available_before} ر.ي)"
+                ), 400
+
+        elif beneficiary_key.startswith('network_') or beneficiary_key.startswith('network:'):
+            sep = '_' if beneficiary_key.startswith('network_') else ':'
+            try:
+                net_id = int(beneficiary_key.split(sep, 1)[1])
+            except Exception:
+                return jsonify(success=False, message="معرف الشبكة غير صالح"), 400
+
+            beneficiary_key = f"network_{net_id}"
+
+            # قفل صف الشبكة وصف المالك في قاعدة البيانات أثناء التحقق والخصم
+            locked_net = Network.query.filter_by(id=net_id).with_for_update().first()
+            if not locked_net:
+                db.session.rollback()
+                return jsonify(success=False, message="الشبكة المحددة غير موجودة"), 404
+
+            owner_user = get_network_owner_user(locked_net)
+            locked_owner = None
+            if owner_user:
+                locked_owner = User.query.filter_by(id=owner_user.id).with_for_update().first()
+
+            net_fin = compute_network_financials(locked_net)
+            available_before = round(float(net_fin['available_balance']), 2)
+
+            if amount > available_before:
+                db.session.rollback()
+                return jsonify(
+                    success=False,
+                    message=f"مرفوض: المبلغ المطلوب صرفه ({amount} ر.ي) أكبر من الرصيد المتاح للمستفيد حالياً ({available_before} ر.ي)"
+                ), 400
+
+            beneficiary_type = 'network_owner'
+            owner_display = getattr(locked_net, 'owner_name', None) or (locked_owner.full_name if locked_owner else 'مالك شبكة')
+            beneficiary_name = f"مالك الشبكة: {owner_display} ({locked_net.name})"
+            target_network_id = locked_net.id
+            target_user_id = locked_owner.id if locked_owner else locked_net.owner_id
+
+            available_after_calc = round(max(0.0, available_before - amount), 2)
+            if locked_owner:
+                locked_owner.balance = available_after_calc
+
+        elif beneficiary_key.startswith('user_') or beneficiary_key.startswith('owner_user:'):
+            sep = '_' if beneficiary_key.startswith('user_') else ':'
+            try:
+                owner_uid = int(beneficiary_key.split(sep, 1)[1])
+            except Exception:
+                return jsonify(success=False, message="معرف مالك الشبكة غير صالح"), 400
+
+            beneficiary_key = f"user_{owner_uid}"
+
+            locked_owner = User.query.filter_by(id=owner_uid).with_for_update().first()
+            if not locked_owner:
+                db.session.rollback()
+                return jsonify(success=False, message="حساب مالك الشبكة غير موجود"), 404
+
+            available_before = round(float(locked_owner.balance or 0), 2)
+            if amount > available_before:
+                db.session.rollback()
+                return jsonify(
+                    success=False,
+                    message=f"مرفوض: المبلغ المطلوب صرفه ({amount} ر.ي) أكبر من الرصيد المتاح للمستفيد حالياً ({available_before} ر.ي)"
+                ), 400
+
+            beneficiary_type = 'network_owner'
+            beneficiary_name = f"مالك الشبكة: {locked_owner.full_name} (@{locked_owner.username})"
+            target_user_id = locked_owner.id
+            target_network_id = None
+            locked_owner.balance = round(max(0.0, available_before - amount), 2)
+
+        else:
+            return jsonify(success=False, message="نوع المستفيد المحدد غير معروف"), 400
+
+        available_after = round(max(0.0, available_before - amount), 2)
+
+        now_dt = datetime.utcnow()
+        voucher_number = f"PV-{now_dt.strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+        while Payout.query.filter_by(voucher_number=voucher_number).first():
+            voucher_number = f"PV-{now_dt.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
+
+        new_payout = Payout(
+            voucher_number=voucher_number,
+            beneficiary_type=beneficiary_type,
+            beneficiary_key=beneficiary_key,
+            beneficiary_name=beneficiary_name,
+            user_id=target_user_id,
+            network_id=target_network_id,
+            available_balance_before=available_before,
+            amount=amount,
+            available_balance_after=available_after,
+            transfer_method=transfer_method,
+            reference_number=reference_number or voucher_number,
+            notes=notes,
+            receipt_img=receipt_img_value,
+            admin_id=user.id,
+            created_at=now_dt
+        )
+        db.session.add(new_payout)
+        db.session.commit()
+
+        # إشعار تلجرام فوري بتسجيل سند الصرف والتسوية
+        try:
+            tg_msg = (
+                f"💸 <b>سند صرف وتسوية مستحقات / أرباح معتمد</b>\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"🧾 <b>رقم السند:</b> <code>{new_payout.voucher_number}</code>\n"
+                f"👤 <b>المستفيد:</b> {new_payout.beneficiary_name}\n"
+                f"💰 <b>الرصيد المتاح قبل الصرف:</b> {available_before:,.0f} ر.ي\n"
+                f"📤 <b>المبلغ المصروف:</b> <b>-{amount:,.0f} ر.ي</b>\n"
+                f"💵 <b>الرصيد المتبقي بعد الصرف:</b> {available_after:,.0f} ر.ي\n"
+                f"🏦 <b>وسيلة التحويل:</b> {transfer_method}\n"
+                f"🔢 <b>رقم الحوالة / المرجع:</b> {reference_number or '—'}\n"
+                f"📝 <b>ملاحظات:</b> {notes or '—'}\n"
+                f"👑 <b>بواسطة المدير:</b> {user.full_name}"
+            )
+            threading.Thread(target=send_telegram_message, args=(tg_msg,), daemon=True).start()
+        except Exception as tg_err:
+            print("[Payout Telegram Notify Error]:", tg_err)
+
+        return jsonify(
+            success=True,
+            message=f"تم اعتماد وصرف مبلغ ({amount:,.0f} ر.ي) لصالح ({beneficiary_name}) بنجاح — رقم السند: {voucher_number}",
+            payout=new_payout.to_dict(),
+            available_balance=available_after,
+            available_balance_after=available_after,
+            beneficiaries=get_all_payout_beneficiaries()
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=f"حدث خطأ أثناء تنفيذ عملية الصرف: {str(e)}"), 500
+
 
 # ==================== 6. مسار Webhook التلجرام ====================
 

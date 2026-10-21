@@ -309,3 +309,53 @@ class OtpRecord(db.Model):
     email = db.Column(db.String(120), nullable=False, index=True)
     code = db.Column(db.String(10), nullable=False)
     expires_at = db.Column(db.Float, nullable=False)
+
+class Payout(db.Model):
+    """جدول موحد لصرف وتسوية المستحقات والأرباح (حساب المدير العام + ملاك الشبكات)"""
+    __tablename__ = 'payouts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    voucher_number = db.Column(db.String(60), unique=True, nullable=False, index=True)
+    beneficiary_type = db.Column(db.String(40), nullable=False, index=True) # 'admin_profit' or 'network_owner'
+    beneficiary_key = db.Column(db.String(60), nullable=False, index=True)  # e.g. 'admin_profit', 'network_1', 'user_5'
+    beneficiary_name = db.Column(db.String(160), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True)
+    network_id = db.Column(db.Integer, db.ForeignKey('networks.id', ondelete='SET NULL'), nullable=True, index=True)
+    available_balance_before = db.Column(db.Float, default=0.0, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    available_balance_after = db.Column(db.Float, default=0.0, nullable=False)
+    transfer_method = db.Column(db.String(80), nullable=False) # الكريمي، بنك الشرق، كاش، حوالة أخرى
+    reference_number = db.Column(db.String(150), nullable=True) # رقم الحوالة / الملاحظات
+    notes = db.Column(db.Text, nullable=True)
+    receipt_img = db.Column(db.Text, nullable=True) # مسار الصورة أو Data URI للسند المرفق
+    admin_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    def to_dict(self):
+        bal_before = round(float(self.available_balance_before or 0), 2)
+        bal_after = round(float(self.available_balance_after or 0), 2)
+        rec = self.receipt_img or ''
+        return {
+            "id": self.id,
+            "voucher_number": self.voucher_number or f"PAY-{self.id}",
+            "beneficiary_type": self.beneficiary_type,
+            "beneficiary_key": self.beneficiary_key,
+            "beneficiary_name": self.beneficiary_name,
+            "beneficiary_label": self.beneficiary_name,
+            "user_id": self.user_id,
+            "network_id": self.network_id,
+            "available_balance_before": bal_before,
+            "balance_before": bal_before,
+            "amount": round(float(self.amount or 0), 2),
+            "available_balance_after": bal_after,
+            "balance_after": bal_after,
+            "transfer_method": self.transfer_method or '',
+            "reference_number": self.reference_number or '',
+            "notes": self.notes or '',
+            "receipt_image": rec,
+            "receipt_img": rec,
+            "receipt_data_uri": rec if rec.startswith('data:') else '',
+            "admin_id": self.admin_id,
+            "created_at": self.created_at.isoformat() if self.created_at else ''
+        }
+
